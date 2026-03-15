@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>経営情報システム 一問一答</title>
+<style>
+:root{
+  --bg:#0d1b2a;
+  --bg2:#112240;
+  --bg3:#1a3353;
+  --card:#162033;
+  --accent:#38bdf8;
+  --accent2:#0ea5e9;
+  --ok:#4ade80;
+  --ng:#f87171;
+  --gold:#fbbf24;
+  --text:#e2e8f0;
+  --text2:#94a3b8;
+  --text3:#64748b;
+  --border:#1e3a5f;
+  --r:12px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  height:100%;
+  width:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,'Hiragino Sans','Yu Gothic',sans-serif;
+  overflow:hidden;
+  touch-action:manipulation;
+}
+/* ===== SCREEN SYSTEM ===== */
+.screen{
+  position:fixed;
+  inset:0;
+  display:none;
+  flex-direction:column;
+  padding-top:var(--safe-top);
+  padding-bottom:var(--safe-bot);
+  background:var(--bg);
+}
+.screen.active{display:flex;}
+.screen-fade{animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== COMMON COMPONENTS ===== */
+.btn{
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;
+  border:none;outline:none;cursor:pointer;
+  font-family:inherit;font-weight:600;
+  border-radius:var(--r);
+  transition:all .15s;
+  -webkit-user-select:none;
+}
+.btn:active{transform:scale(.96);opacity:.85;}
+.btn-primary{
+  background:var(--accent);color:#0d1b2a;
+  font-size:16px;height:52px;width:100%;
+}
+.btn-ghost{
+  background:var(--bg3);color:var(--text);
+  font-size:14px;height:44px;
+  border:1px solid var(--border);
+}
+.pill{
+  display:inline-flex;align-items:center;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:4px 12px;
+  font-size:12px;color:var(--text2);
+}
+.section-title{
+  font-size:11px;font-weight:700;letter-spacing:.08em;
+  color:var(--text3);text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+/* ===== HOME SCREEN ===== */
+#s-home{padding:0;}
+.home-header{
+  padding:12px 16px 10px;
+  padding-top:calc(var(--safe-top) + 12px);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.home-title{font-size:15px;font-weight:800;color:var(--accent);}
+.home-subtitle{font-size:10px;color:var(--text3);margin-top:1px;}
+.home-stats{
+  display:flex;gap:6px;
+}
+.stat-chip{
+  text-align:center;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:5px 8px;
+  min-width:60px;
+}
+.stat-chip .sv{font-size:18px;font-weight:800;color:var(--accent);}
+.stat-chip .sl{font-size:9px;color:var(--text3);margin-top:1px;}
+
+.home-body{
+  flex:1;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  padding:12px 16px;
+  gap:12px;
+}
+
+/* Radar Chart */
+.chart-wrap{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+#radarCanvas{flex-shrink:0;}
+.chart-legend{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  overflow:hidden;
+}
+.legend-item{
+  display:flex;align-items:center;gap:5px;
+}
+.legend-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.legend-label{font-size:10px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.legend-pct{font-size:10px;font-weight:700;color:var(--text);width:28px;text-align:right;flex-shrink:0;}
+
+/* Mode buttons */
+.mode-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  flex-shrink:0;
+}
+.mode-btn{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:12px 10px;
+  text-align:left;
+  cursor:pointer;
+  transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.mode-btn:active{transform:scale(.97);background:var(--bg3);}
+.mode-btn .mb-icon{font-size:20px;margin-bottom:4px;}
+.mode-btn .mb-title{font-size:13px;font-weight:700;color:var(--text);}
+.mode-btn .mb-desc{font-size:10px;color:var(--text3);margin-top:2px;}
+
+/* Reset link */
+.reset-link{
+  text-align:center;
+  font-size:11px;
+  color:var(--text3);
+  cursor:pointer;
+  padding:4px;
+  flex-shrink:0;
+}
+
+/* ===== CHAPTER SELECT SCREEN ===== */
+#s-chapter{padding:0;}
+.modal-header{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px;
+  padding-top:calc(var(--safe-top) + 14px);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background:var(--bg);
+}
+.back-btn{
+  width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg3);border-radius:8px;
+  cursor:pointer;font-size:16px;
+  border:1px solid var(--border);
+  flex-shrink:0;
+}
+.modal-title{font-size:15px;font-weight:700;flex:1;}
+.modal-body{
+  flex:1;overflow-y:auto;
+  padding:12px 16px;
+  display:flex;flex-direction:column;gap:8px;
+  -webkit-overflow-scrolling:touch;
+}
+.ch-item{
+  display:flex;align-items:center;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:14px;
+  cursor:pointer;
+  transition:all .15s;
+  gap:12px;
+}
+.ch-item:active{transform:scale(.98);}
+.ch-item.selected{border-color:var(--accent);background:rgba(56,189,248,.08);}
+.ch-number{
+  width:32px;height:32px;
+  border-radius:8px;
+  background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;color:var(--accent);
+  flex-shrink:0;
+}
+.ch-info{flex:1;}
+.ch-name{font-size:13px;font-weight:600;}
+.ch-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.ch-rate{font-size:13px;font-weight:700;color:var(--ok);}
+.modal-footer{
+  padding:12px 16px;
+  padding-bottom:calc(var(--safe-bot) + 12px);
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+  background:var(--bg);
+}
+
+/* ===== FILTER SCREEN ===== */
+#s-filter{padding:0;}
+.filter-body{
+  flex:1;overflow-y:auto;
+  padding:12px 16px;
+  display:flex;flex-direction:column;gap:14px;
+  -webkit-overflow-scrolling:touch;
+}
+.toggle-row{
+  display:flex;align-items:center;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:12px 14px;
+  gap:10px;
+  cursor:pointer;
+}
+.toggle-row:active{opacity:.8;}
+.toggle-icon{font-size:18px;flex-shrink:0;}
+.toggle-info{flex:1;}
+.toggle-title{font-size:13px;font-weight:600;}
+.toggle-desc{font-size:11px;color:var(--text3);margin-top:2px;}
+.toggle-switch{
+  width:44px;height:26px;
+  background:var(--bg3);
+  border-radius:13px;
+  position:relative;
+  transition:background .2s;
+  flex-shrink:0;
+  border:1px solid var(--border);
+}
+.toggle-switch.on{background:var(--accent);}
+.toggle-switch::after{
+  content:'';
+  position:absolute;
+  top:3px;left:3px;
+  width:18px;height:18px;
+  border-radius:50%;
+  background:#fff;
+  transition:transform .2s;
+}
+.toggle-switch.on::after{transform:translateX(18px);}
+.filter-count-bar{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:12px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.filter-count-bar .fct{font-size:13px;color:var(--text2);}
+.filter-count-bar .fcn{font-size:20px;font-weight:800;color:var(--accent);}
+.limit-row{
+  display:flex;align-items:center;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:10px 14px;
+  gap:10px;
+}
+.limit-label{font-size:13px;flex:1;}
+.limit-stepper{display:flex;align-items:center;gap:10px;}
+.step-btn{
+  width:32px;height:32px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.step-val{font-size:16px;font-weight:700;min-width:28px;text-align:center;}
+
+/* ===== QUIZ SCREEN ===== */
+#s-quiz{padding:0;}
+.quiz-header{
+  padding:10px 16px;
+  padding-top:calc(var(--safe-top) + 10px);
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;
+}
+.quiz-progress-wrap{flex:1;}
+.quiz-prog-text{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:var(--text3);
+  margin-bottom:4px;
+}
+.quiz-prog-bar{
+  height:4px;background:var(--bg3);
+  border-radius:2px;overflow:hidden;
+}
+.quiz-prog-fill{
+  height:100%;background:var(--accent);
+  border-radius:2px;
+  transition:width .3s ease;
+}
+.quiz-score{
+  font-size:12px;font-weight:700;
+  color:var(--ok);
+  white-space:nowrap;
+}
+.bm-btn{
+  width:36px;height:36px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+  cursor:pointer;
+  flex-shrink:0;
+  transition:all .15s;
+}
+.bm-btn.active{background:rgba(251,191,36,.15);border-color:var(--gold);}
+
+.quiz-body{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:0 16px;
+  gap:10px;
+  overflow:hidden;
+  min-height:0;
+}
+
+.question-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:14px;
+  flex-shrink:0;
+}
+.q-chapter{
+  font-size:10px;color:var(--accent);
+  font-weight:700;letter-spacing:.05em;
+  margin-bottom:6px;
+}
+.q-text{
+  font-size:15px;
+  line-height:1.55;
+  color:var(--text);
+  max-height:90px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.choices{
+  display:flex;flex-direction:column;gap:8px;
+  overflow:hidden;
+  flex:1;
+  min-height:0;
+  justify-content:center;
+}
+.choice-btn{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--card);
+  border:1.5px solid var(--border);
+  border-radius:var(--r);
+  padding:11px 14px;
+  cursor:pointer;
+  text-align:left;
+  transition:all .15s;
+  flex-shrink:0;
+}
+.choice-btn:active:not(.answered){transform:scale(.98);background:var(--bg3);}
+.choice-btn.correct{
+  border-color:var(--ok);
+  background:rgba(74,222,128,.1);
+}
+.choice-btn.wrong{
+  border-color:var(--ng);
+  background:rgba(248,113,113,.1);
+}
+.choice-label{
+  width:22px;height:22px;
+  background:var(--bg3);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;
+  color:var(--text2);
+  flex-shrink:0;
+}
+.choice-btn.correct .choice-label{background:var(--ok);color:#0d1b2a;}
+.choice-btn.wrong .choice-label{background:var(--ng);color:#0d1b2a;}
+.choice-text{
+  font-size:13px;
+  line-height:1.45;
+  color:var(--text);
+  padding-top:2px;
+}
+
+.quiz-footer{
+  padding:10px 16px;
+  padding-bottom:calc(var(--safe-bot) + 10px);
+  flex-shrink:0;
+}
+#btn-next{
+  background:var(--accent2);
+  opacity:0;pointer-events:none;
+  transition:opacity .2s;
+}
+#btn-next.visible{opacity:1;pointer-events:all;}
+
+/* ===== RESULT SCREEN ===== */
+#s-result{padding:0;}
+.result-header{
+  padding:14px 16px;
+  padding-top:calc(var(--safe-top) + 14px);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  text-align:center;
+}
+.result-emoji{font-size:40px;margin-bottom:4px;}
+.result-title{font-size:18px;font-weight:800;}
+.result-sub{font-size:13px;color:var(--text3);margin-top:4px;}
+.result-stats{
+  display:flex;gap:8px;
+  padding:12px 16px;
+  flex-shrink:0;
+}
+.rs-card{
+  flex:1;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:10px;
+  text-align:center;
+}
+.rs-val{font-size:22px;font-weight:800;color:var(--accent);}
+.rs-val.ok-col{color:var(--ok);}
+.rs-val.ng-col{color:var(--ng);}
+.rs-label{font-size:10px;color:var(--text3);margin-top:3px;}
+.wrong-list-wrap{
+  flex:1;min-height:0;
+  overflow:hidden;
+  padding:0 16px;
+  display:flex;flex-direction:column;
+}
+.wrong-list-title{
+  font-size:11px;font-weight:700;letter-spacing:.08em;
+  color:var(--text3);text-transform:uppercase;
+  padding:6px 0;
+  flex-shrink:0;
+}
+.wrong-list{
+  flex:1;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;gap:8px;
+  padding-bottom:8px;
+}
+.wrong-item{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-left:3px solid var(--ng);
+  border-radius:var(--r);
+  padding:10px 12px;
+}
+.wi-q{font-size:12px;color:var(--text2);}
+.wi-a{font-size:12px;color:var(--ok);margin-top:4px;font-weight:600;}
+.result-footer{
+  padding:10px 16px;
+  padding-bottom:calc(var(--safe-bot) + 10px);
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+  display:flex;gap:8px;
+  background:var(--bg);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px;}
+
+/* ===== NO QUESTIONS ===== */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:10px;color:var(--text3);
+  padding:20px;text-align:center;
+}
+.empty-state .es-icon{font-size:40px;}
+.empty-state .es-text{font-size:14px;}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<div id="s-home" class="screen active">
+  <div class="home-header">
+    <div>
+      <div class="home-title">経営情報システム</div>
+      <div class="home-subtitle">中小企業診断士 一問一答</div>
+    </div>
+    <div class="home-stats">
+      <div class="stat-chip">
+        <div class="sv" id="h-total">0</div>
+        <div class="sl">出題数</div>
+      </div>
+      <div class="stat-chip">
+        <div class="sv" id="h-rate">0%</div>
+        <div class="sl">正答率</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-body">
+    <!-- Radar chart -->
+    <div class="chart-wrap">
+      <canvas id="radarCanvas" width="150" height="150"></canvas>
+      <div class="chart-legend" id="chart-legend"></div>
+    </div>
+
+    <!-- Mode buttons -->
+    <div>
+      <div class="section-title">出題モードを選択</div>
+      <div class="mode-grid">
+        <div class="mode-btn" onclick="openChapter()">
+          <div class="mb-icon">📚</div>
+          <div class="mb-title">章別</div>
+          <div class="mb-desc">章を選んで出題</div>
+        </div>
+        <div class="mode-btn" onclick="startRandom()">
+          <div class="mb-icon">🎲</div>
+          <div class="mb-title">ランダム</div>
+          <div class="mb-desc">全問から10問</div>
+        </div>
+        <div class="mode-btn" onclick="openFilter()">
+          <div class="mb-icon">🔍</div>
+          <div class="mb-title">絞り込み</div>
+          <div class="mb-desc">条件指定で出題</div>
+        </div>
+        <div class="mode-btn" onclick="openBookmarks()">
+          <div class="mb-icon">★</div>
+          <div class="mb-title">ブックマーク</div>
+          <div class="mb-desc">★問題のみ</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reset-link" onclick="confirmReset()">🗑 学習データをリセット</div>
+  </div>
+</div>
+
+<!-- ===== CHAPTER SELECT ===== -->
+<div id="s-chapter" class="screen">
+  <div class="modal-header">
+    <div class="back-btn" onclick="showScreen('s-home')">‹</div>
+    <div class="modal-title">章を選択</div>
+  </div>
+  <div class="modal-body" id="chapter-list"></div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" id="btn-start-chapter" onclick="startChapter()">この章で開始</button>
+  </div>
+</div>
+
+<!-- ===== FILTER ===== -->
+<div id="s-filter" class="screen">
+  <div class="modal-header">
+    <div class="back-btn" onclick="showScreen('s-home')">‹</div>
+    <div class="modal-title">絞り込み出題</div>
+  </div>
+  <div class="filter-body">
+
+    <div>
+      <div class="section-title">論点（章）</div>
+      <div id="filter-chapter-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+
+    <div>
+      <div class="section-title">出題条件</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="toggle-row" onclick="toggleFilter('wrongLast')">
+          <div class="toggle-icon">❌</div>
+          <div class="toggle-info">
+            <div class="toggle-title">間違えたまま</div>
+            <div class="toggle-desc">直近の回答が不正解</div>
+          </div>
+          <div class="toggle-switch" id="tf-wrongLast"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleFilter('frequentlyWrong')">
+          <div class="toggle-icon">⚠️</div>
+          <div class="toggle-info">
+            <div class="toggle-title">頻繁に間違えている</div>
+            <div class="toggle-desc">不正解率50%以上・3回以上出題</div>
+          </div>
+          <div class="toggle-switch" id="tf-frequentlyWrong"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleFilter('notYetCorrect')">
+          <div class="toggle-icon">🆕</div>
+          <div class="toggle-info">
+            <div class="toggle-title">まだ正答していない</div>
+            <div class="toggle-desc">未正解・未出題を含む</div>
+          </div>
+          <div class="toggle-switch" id="tf-notYetCorrect"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleFilter('bookmark')">
+          <div class="toggle-icon">★</div>
+          <div class="toggle-info">
+            <div class="toggle-title">ブックマーク問題</div>
+            <div class="toggle-desc">★登録した問題のみ</div>
+          </div>
+          <div class="toggle-switch" id="tf-bookmark"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">出題回数の上限</div>
+      <div class="limit-row">
+        <div class="limit-label">出題回数が <span id="limit-val-disp">制限なし</span> 以下</div>
+        <div class="limit-stepper">
+          <div class="step-btn" onclick="changeLimit(-1)">−</div>
+          <div class="step-val" id="limit-num">∞</div>
+          <div class="step-btn" onclick="changeLimit(1)">＋</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-count-bar">
+      <div class="fct">対象問題数</div>
+      <div><span class="fcn" id="filter-count">0</span><span style="font-size:12px;color:var(--text3)"> 問</span></div>
+    </div>
+
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" id="btn-start-filter" onclick="startFiltered()">出題開始</button>
+  </div>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div id="s-quiz" class="screen">
+  <div class="quiz-header">
+    <div class="quiz-progress-wrap">
+      <div class="quiz-prog-text">
+        <span id="q-prog-text">1 / 10</span>
+        <span id="q-chapter-label" style="font-size:10px;color:var(--accent);"></span>
+      </div>
+      <div class="quiz-prog-bar"><div class="quiz-prog-fill" id="q-prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="quiz-score" id="q-score">✓ 0</div>
+    <div class="bm-btn" id="bm-btn" onclick="toggleBookmark()">☆</div>
+  </div>
+
+  <div class="quiz-body">
+    <div class="question-card">
+      <div class="q-chapter" id="q-ch"></div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="quiz-footer">
+    <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">次の問題 →</button>
+  </div>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div id="s-result" class="screen">
+  <div class="result-header">
+    <div class="result-emoji" id="r-emoji">🎉</div>
+    <div class="result-title" id="r-title">セッション終了</div>
+    <div class="result-sub" id="r-sub"></div>
+  </div>
+  <div class="result-stats">
+    <div class="rs-card">
+      <div class="rs-val" id="r-total">0</div>
+      <div class="rs-label">出題数</div>
+    </div>
+    <div class="rs-card">
+      <div class="rs-val ok-col" id="r-correct">0</div>
+      <div class="rs-label">正解</div>
+    </div>
+    <div class="rs-card">
+      <div class="rs-val ng-col" id="r-wrong">0</div>
+      <div class="rs-label">不正解</div>
+    </div>
+    <div class="rs-card">
+      <div class="rs-val" id="r-rate">0%</div>
+      <div class="rs-label">正答率</div>
+    </div>
+  </div>
+  <div class="wrong-list-wrap">
+    <div class="wrong-list-title" id="wrong-list-title">不正解一覧</div>
+    <div class="wrong-list" id="wrong-list"></div>
+  </div>
+  <div class="result-footer">
+    <button class="btn btn-ghost" style="flex:1" onclick="showScreen('s-home');renderHome()">🏠 ホーム</button>
+    <button class="btn btn-primary" style="flex:1" onclick="restartSession()">↻ もう一度</button>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const QUESTIONS = [{"id":1,"q":"コンピュータの５大装置を全て挙げよ。","a":"入力装置、演算装置、制御装置、記憶装置、出力装置","ch":"第２章 コンピュータの基礎技術"},{"id":2,"q":"記憶装置の2種類を挙げよ。","a":"主記憶装置、補助記憶装置","ch":"第２章 コンピュータの基礎技術"},{"id":3,"q":"主記憶装置はコンピュータの電源を落とすとデータはどうなるか。","a":"消滅する（揮発性）","ch":"第２章 コンピュータの基礎技術"},{"id":4,"q":"補助記憶装置はコンピュータの電源を落とすとデータはどうなるか。","a":"消滅しない（不揮発性）","ch":"第２章 コンピュータの基礎技術"},{"id":5,"q":"主記憶装置が持つ、電源を切るとデータが消える性質を何というか。","a":"揮発性","ch":"第２章 コンピュータの基礎技術"},{"id":6,"q":"補助記憶装置が持つ、電源を切ってもデータが消えない性質を何というか。","a":"不揮発性","ch":"第２章 コンピュータの基礎技術"},{"id":7,"q":"主記憶装置は実行中のプログラムと何を保持するか。","a":"データ","ch":"第２章 コンピュータの基礎技術"},{"id":8,"q":"コンピュータ内部のデータの伝送路を何というか。","a":"バス","ch":"第２章 コンピュータの基礎技術"},{"id":9,"q":"CPU内部のデータ伝送路を何というか。","a":"内部バス","ch":"第２章 コンピュータの基礎技術"},{"id":10,"q":"CPUと主記憶装置・補助記憶装置とを結ぶデータ伝送路を何というか。","a":"外部バス","ch":"第２章 コンピュータの基礎技術"},{"id":11,"q":"コンピュータと周辺機器・拡張カードとを結ぶデータ伝送路を何というか。","a":"拡張バス","ch":"第２章 コンピュータの基礎技術"},{"id":12,"q":"拡張カードを接続するスロットの規格名称を挙げよ。","a":"PCI Express","ch":"第２章 コンピュータの基礎技術"},{"id":13,"q":"ROMはどのような性質の半導体メモリか。","a":"不揮発性","ch":"第２章 コンピュータの基礎技術"},{"id":14,"q":"製造時にデータを書き込むと後から一切書き込みができないROMを何というか。","a":"マスクROM","ch":"第２章 コンピュータの基礎技術"},{"id":15,"q":"ROMライタで一度だけ書き込めるROMを何というか。","a":"PROM","ch":"第２章 コンピュータの基礎技術"},{"id":16,"q":"紫外線でデータを消去できるROMを何というか。","a":"EPROM","ch":"第２章 コンピュータの基礎技術"},{"id":17,"q":"電気的にデータを消去できるROMを何というか。","a":"EEPROM","ch":"第２章 コンピュータの基礎技術"},{"id":18,"q":"SRAMとDRAMを比較して、SRAMの容量はどちらが大きいか。","a":"SRAMの方が小さい","ch":"第２章 コンピュータの基礎技術"},{"id":19,"q":"SRAMはDRAMに比べて処理速度はどちらが速いか。","a":"SRAMの方が速い","ch":"第２章 コンピュータの基礎技術"},{"id":20,"q":"SRAMはリフレッシュが必要か不要か。","a":"不要","ch":"第２章 コンピュータの基礎技術"},{"id":21,"q":"SRAMはDRAMに比べてコストはどちらが高いか。","a":"SRAMの方が高い","ch":"第２章 コンピュータの基礎技術"},{"id":22,"q":"SRAMはどのような用途に使われるか。","a":"レジスタ、キャッシュメモリ","ch":"第２章 コンピュータの基礎技術"},{"id":23,"q":"SRAMの記憶素子として使われる回路を何というか。","a":"フリップフロップ回路","ch":"第２章 コンピュータの基礎技術"},{"id":24,"q":"CPUのクロックに同期させて従来のDRAMより高速化を実現したDRAMを何というか。","a":"SDRAM","ch":"第３章 データベース"},{"id":25,"q":"SDRAMよりデータ転送速度をさらに高速化したDRAMを何というか。","a":"DDR SDRAM","ch":"第２章 コンピュータの基礎技術"},{"id":26,"q":"ディスプレイに表示しているデータを保持するメモリを何というか。","a":"VRAM","ch":"第２章 コンピュータの基礎技術"},{"id":27,"q":"VRAMはDRAMとSRAMのどちらを使用しているか。","a":"DRAM","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":28,"q":"主記憶装置のデータの誤りを自動的に検知・訂正する技術を何というか。","a":"ECC","ch":"第２章 コンピュータの基礎技術"},{"id":29,"q":"主記憶装置の空き領域を確保する技術を何というか。","a":"ガーベージコレクション","ch":"第２章 コンピュータの基礎技術"},{"id":30,"q":"断片化した空き領域をまとめることにより連続領域とする技術を何というか。","a":"メモリコンパクション","ch":"第２章 コンピュータの基礎技術"},{"id":31,"q":"主記憶装置とCPUの速度差を埋める装置を何というか。","a":"キャッシュメモリ","ch":"第２章 コンピュータの基礎技術"},{"id":32,"q":"同じ規格の主記憶装置を2枚実装する技術を何というか。","a":"デュアルチャンネル","ch":"第２章 コンピュータの基礎技術"},{"id":33,"q":"ハードディスクの円盤状の同心円状の1周の領域を何というか。","a":"トラック","ch":"第２章 コンピュータの基礎技術"},{"id":34,"q":"同心円の領域を一定の大きさに区切ったハードディスクの最小単位を何というか。","a":"セクタ","ch":"第２章 コンピュータの基礎技術"},{"id":35,"q":"セクタを複数まとめた単位を何というか。","a":"クラスタ","ch":"第２章 コンピュータの基礎技術"},{"id":36,"q":"同じ半径のトラックを全円盤の両面を結んだ領域を何というか。","a":"シリンダ","ch":"第２章 コンピュータの基礎技術"},{"id":37,"q":"SSDのハードディスク装置と比べたメリットを3つ挙げよ。","a":"アクセスが高速、消費電力が少ない、耐衝撃性が高い","ch":"第２章 コンピュータの基礎技術"},{"id":38,"q":"光ディスクの3種類の型を挙げよ。","a":"読み込み専用型、追記型、書換可能型","ch":"第２章 コンピュータの基礎技術"},{"id":39,"q":"光ディスクの追記型の主な媒体を挙げよ。","a":"DVD-R、BD-R","ch":"第２章 コンピュータの基礎技術"},{"id":40,"q":"光ディスクの書換可能型の主な媒体を挙げよ。","a":"DVD-RW、DVD-RAM、BD-RE","ch":"第２章 コンピュータの基礎技術"},{"id":41,"q":"フラッシュメモリを採用している記憶装置・記憶媒体を3つ挙げよ。","a":"SSD、SDカード、USBメモリ","ch":"第２章 コンピュータの基礎技術"},{"id":42,"q":"ディスクキャッシュは何と何の間にある装置か。","a":"主記憶装置と補助記憶装置の間","ch":"第２章 コンピュータの基礎技術"},{"id":43,"q":"ディスクキャッシュが存在する目的は何か。","a":"主記憶装置と補助記憶装置の速度差を埋める","ch":"第２章 コンピュータの基礎技術"},{"id":44,"q":"補助記憶装置に保存したデータが複数の場所に分散することを何というか。","a":"フラグメンテーション（断片化）","ch":"第９章 統計解析"},{"id":45,"q":"フラグメンテーションが発生するとアクセス時間はどうなるか。","a":"長くなる","ch":"第２章 コンピュータの基礎技術"},{"id":46,"q":"フラグメンテーションを解消することを何というか。","a":"デフラグメンテーション","ch":"第２章 コンピュータの基礎技術"},{"id":47,"q":"仮想記憶装置とは何か。","a":"主記憶装置の実容量を超える領域を作り出す仕組み","ch":"第２章 コンピュータの基礎技術"},{"id":48,"q":"仮想記憶でページを入れ替える処理を何というか。","a":"スワッピング","ch":"第２章 コンピュータの基礎技術"},{"id":49,"q":"スワッピングが多発すると何が発生するか。","a":"スラッシング","ch":"第２章 コンピュータの基礎技術"},{"id":50,"q":"記憶装置を速度の速い順に並べよ（レジスタ・キャッシュメモリ・主記憶装置・ディスクキャッシュ・補助記憶装置）。","a":"レジスタ⇒キャッシュメモリ⇒主記憶装置⇒ディスクキャッシュ⇒補助記憶装置","ch":"第２章 コンピュータの基礎技術"},{"id":51,"q":"記憶装置の中で記憶容量当たりの単価が最も低いのはどれか。","a":"補助記憶装置","ch":"第２章 コンピュータの基礎技術"},{"id":52,"q":"英数字や記号、仮名文字を日本工業規格が標準化している配列を何というか。","a":"JIS配列","ch":"第２章 コンピュータの基礎技術"},{"id":53,"q":"0から9までの10個のキーで構成される数値入力用のキー配列を何というか。","a":"テンキー","ch":"第２章 コンピュータの基礎技術"},{"id":54,"q":"アルファベットの標準的な配列を何というか。","a":"QWERTY配列","ch":"第２章 コンピュータの基礎技術"},{"id":55,"q":"タッチパネル方式で電圧の変化を捉える方式は何か。","a":"抵抗膜方式","ch":"第２章 コンピュータの基礎技術"},{"id":56,"q":"タッチパネル方式で電荷の変化を捉える方式は何か。","a":"静電容量方式","ch":"第２章 コンピュータの基礎技術"},{"id":57,"q":"抵抗膜方式・静電容量方式の他のタッチパネル方式は何か。","a":"赤外線方式","ch":"第２章 コンピュータの基礎技術"},{"id":58,"q":"マルチタッチが可能なタッチパネル方式を2つ挙げよ。","a":"静電容量方式、赤外線方式","ch":"第２章 コンピュータの基礎技術"},{"id":59,"q":"画面を指先で1回叩く操作を何というか。","a":"タップ","ch":"第２章 コンピュータの基礎技術"},{"id":60,"q":"画面を指先で2回叩く操作を何というか。","a":"ダブルタップ","ch":"第２章 コンピュータの基礎技術"},{"id":61,"q":"画面を指先で長く押す操作を何というか。","a":"ロングタップ","ch":"第２章 コンピュータの基礎技術"},{"id":62,"q":"画面に触れ、その指先を素早く払う操作（画面の一部）を何というか。","a":"フリック","ch":"第２章 コンピュータの基礎技術"},{"id":63,"q":"画面に触れ、その指先をスライドさせる操作（画面全体）を何というか。","a":"スワイプ","ch":"第２章 コンピュータの基礎技術"},{"id":64,"q":"2本の指の間隔を狭めたり広くしたりする操作を何というか。","a":"ピンチ","ch":"第２章 コンピュータの基礎技術"},{"id":65,"q":"同時に2本以上の指で操作することを何というか。","a":"マルチタップ","ch":"第２章 コンピュータの基礎技術"},{"id":66,"q":"1つのキーに五十音の1行などが割り当てられ、タップ回数で文字を選択する入力方式を何というか。","a":"トグル入力","ch":"第３章 データベース"},{"id":67,"q":"角速度を検知するセンサーを何というか。","a":"ジャイロセンサー","ch":"第２章 コンピュータの基礎技術"},{"id":68,"q":"磁場の大きさや変化を検知するセンサーを何というか。","a":"磁気センサー","ch":"第２章 コンピュータの基礎技術"},{"id":69,"q":"傾きや動き、振動あるいは衝撃等の変位量を検知するセンサーを何というか。","a":"加速度センサー","ch":"第２章 コンピュータの基礎技術"},{"id":70,"q":"非接触で検出物体が近づいたことを検知するセンサーを何というか。","a":"近接センサー","ch":"第２章 コンピュータの基礎技術"},{"id":71,"q":"液晶ディスプレイのバックライトを設けるタイプを何型というか。","a":"透過型","ch":"第２章 コンピュータの基礎技術"},{"id":72,"q":"液晶ディスプレイのバックライトを設けず自然光を反射させるタイプを何型というか。","a":"反射型","ch":"第２章 コンピュータの基礎技術"},{"id":73,"q":"液晶分子の駆動方式の種類を3つ挙げよ。","a":"TN型、VA型、IPS型","ch":"第２章 コンピュータの基礎技術"},{"id":74,"q":"有機ELディスプレイが液晶より優れている点を4つ挙げよ。","a":"バックライト不要、輝度が高い、消費電力が小さい、視認性が高い","ch":"第２章 コンピュータの基礎技術"},{"id":75,"q":"インクジェット・レーザープリンタでカラー印刷する際のインクの色を4つ挙げよ。","a":"黒・シアン・マゼンダ・イエロー","ch":"第２章 コンピュータの基礎技術"},{"id":76,"q":"3Dプリンタで積み上げる間隔を何というか。","a":"積層ピッチ","ch":"第２章 コンピュータの基礎技術"},{"id":77,"q":"1ビットずつ伝送する方式を何というか。","a":"シリアル伝送","ch":"第２章 コンピュータの基礎技術"},{"id":78,"q":"複数のビットを同時に伝送する方式を何というか。","a":"パラレル伝送","ch":"第２章 コンピュータの基礎技術"},{"id":79,"q":"シリアル伝送とパラレル伝送で一般的に高速なのはどちらか。","a":"シリアル伝送","ch":"第２章 コンピュータの基礎技術"},{"id":80,"q":"パラレル伝送のインターフェース規格を3つ挙げよ。","a":"SCSI、IEEE1284、IDE","ch":"第２章 コンピュータの基礎技術"},{"id":81,"q":"USBは最大何台まで接続できるか。","a":"127台","ch":"第２章 コンピュータの基礎技術"},{"id":82,"q":"USBのType-Aは上下対称か非対称か。","a":"非対称","ch":"第２章 コンピュータの基礎技術"},{"id":83,"q":"USBのType-Cは上下対称か非対称か。","a":"対称","ch":"第２章 コンピュータの基礎技術"},{"id":84,"q":"USBハブを介して接続する方式を何というか。","a":"カスケード接続","ch":"第４章 通信ネットワーク"},{"id":85,"q":"パラレルATAをシリアル化・高速化した内蔵ハードディスク接続規格を何というか。","a":"SATA","ch":"第２章 コンピュータの基礎技術"},{"id":86,"q":"SATAを発展させた外付けハードディスク接続規格を何というか。","a":"e-SATA","ch":"第２章 コンピュータの基礎技術"},{"id":87,"q":"SSDとの接続に使われるカード状の基板規格を2つ挙げよ。","a":"mSATA、NVMe","ch":"第２章 コンピュータの基礎技術"},{"id":88,"q":"主にディスプレイ装置や家電製品・AV機器接続に使われる規格を何というか。","a":"HDMI","ch":"第２章 コンピュータの基礎技術"},{"id":89,"q":"主にディスプレイ接続に使われ、ディジーチェーン接続でマルチディスプレイ環境を構築できる規格を何というか。","a":"Display Port","ch":"第２章 コンピュータの基礎技術"},{"id":90,"q":"電源を入れたまま機器を接続できる機能を何というか。","a":"ホットプラグ","ch":"第２章 コンピュータの基礎技術"},{"id":91,"q":"接続すると接続機器の検知と設定を自動的に行う機能を何というか。","a":"プラグアンドプレイ","ch":"第２章 コンピュータの基礎技術"},{"id":92,"q":"ソフトウェアの2大分類を挙げよ。","a":"システムソフトウェア、アプリケーション（応用）ソフトウェア","ch":"第２章 コンピュータの基礎技術"},{"id":93,"q":"OSとアプリケーションソフトウェアの中間的役割を果たすソフトウェアを何というか。","a":"ミドルウェア","ch":"第２章 コンピュータの基礎技術"},{"id":94,"q":"単独では動作せず特定のソフトウェアに機能を追加するソフトウェアを何というか。","a":"プラグインソフトウェア","ch":"第２章 コンピュータの基礎技術"},{"id":95,"q":"機器に固定的に組み込まれその機器を制御するソフトウェアを何というか。","a":"ファームウェア","ch":"第２章 コンピュータの基礎技術"},{"id":96,"q":"電源投入後OSに先立って起動し周辺機器を制御するソフトウェアを何というか。","a":"BIOS","ch":"第２章 コンピュータの基礎技術"},{"id":97,"q":"ソフトウェア開発・保守を支援するソフトウェアを何というか。","a":"CASEツール","ch":"第２章 コンピュータの基礎技術"},{"id":98,"q":"データベースの維持・運用を管理するソフトウェアを何というか。","a":"DBMS","ch":"第３章 データベース"},{"id":99,"q":"コンピュータに特定の機能を提供するあるいは運用を支援するソフトウェアを何というか。","a":"ユーティリティ","ch":"第２章 コンピュータの基礎技術"},{"id":100,"q":"周辺機器を利用可能にするとともにデータの送受信を制御するソフトウェアを何というか。","a":"デバイスドライバ","ch":"第２章 コンピュータの基礎技術"},{"id":101,"q":"オペレーティングシステムの主な機能を5つ挙げよ。","a":"ジョブ管理、タスク管理、入出力管理、データ管理、ユーザ管理","ch":"第２章 コンピュータの基礎技術"},{"id":102,"q":"低速な周辺機器を使用するとき補助記憶装置等に一時的にデータを書き込む仕組みを何というか。","a":"スプーリング","ch":"第２章 コンピュータの基礎技術"},{"id":103,"q":"コンピュータ1台あたりのユーザアカウントは何個設定できるか。","a":"複数設定できる","ch":"第２章 コンピュータの基礎技術"},{"id":104,"q":"ジョブとは何から見た処理単位か。","a":"ユーザから見た処理単位","ch":"第２章 コンピュータの基礎技術"},{"id":105,"q":"タスクとは何から見た処理単位か。","a":"コンピュータから見た処理単位","ch":"第２章 コンピュータの基礎技術"},{"id":106,"q":"ジョブを小さな処理に分けた場合の一つひとつの処理を何というか。","a":"ジョブステップ","ch":"第２章 コンピュータの基礎技術"},{"id":107,"q":"一度に1つのタスクのみ実行する方式を何というか。","a":"シングルタスク","ch":"第２章 コンピュータの基礎技術"},{"id":108,"q":"一度に複数のタスクを同時並行的に実行する方式を何というか。","a":"マルチタスク","ch":"第２章 コンピュータの基礎技術"},{"id":109,"q":"タスクにCPU等の資源を割り付けることを何というか。","a":"ディスパッチング","ch":"第２章 コンピュータの基礎技術"},{"id":110,"q":"各タスクに優先順位をつけ高い方を優先してCPUを割り付けるスケジューリング方式を何というか。","a":"優先度方式","ch":"第２章 コンピュータの基礎技術"},{"id":111,"q":"各タスクに均等に一定時間ごとにCPUを割り付けるスケジューリング方式を何というか。","a":"ラウンドロビン方式","ch":"第２章 コンピュータの基礎技術"},{"id":112,"q":"階層構造のディレクトリで最上位に位置するディレクトリを何というか。","a":"ルートディレクトリ","ch":"第２章 コンピュータの基礎技術"},{"id":113,"q":"特定のディレクトリの下にある下位のディレクトリを何というか。","a":"サブディレクトリ","ch":"第２章 コンピュータの基礎技術"},{"id":114,"q":"ユーザが実行中の現在位置（作業中）のディレクトリを何というか。","a":"カレントディレクトリ","ch":"第２章 コンピュータの基礎技術"},{"id":115,"q":"ログインした際にユーザごとに割り当てられるディレクトリを何というか。","a":"ホームディレクトリ","ch":"第２章 コンピュータの基礎技術"},{"id":116,"q":"オープンソースソフトウェア（OSS）とは何か。","a":"プログラムを無償で公開して誰でも改良・再配布できる考え方またはプログラム自体","ch":"第２章 コンピュータの基礎技術"},{"id":117,"q":"OSSの代表的なオペレーティングシステムは何か。","a":"Linux","ch":"第２章 コンピュータの基礎技術"},{"id":118,"q":"OSSの代表的な統合開発環境は何か。","a":"Eclipse","ch":"第２章 コンピュータの基礎技術"},{"id":119,"q":"OSSの代表的なDNSサーバは何か。","a":"BIND","ch":"第４章 通信ネットワーク"},{"id":120,"q":"OSSの代表的なWebサーバは何か。","a":"Apache","ch":"第２章 コンピュータの基礎技術"},{"id":121,"q":"OSSの代表的なデータベースは何か。","a":"MySQL","ch":"第３章 データベース"},{"id":122,"q":"よく使われるOSSの組み合わせの名称を何というか。","a":"LAMP","ch":"第２章 コンピュータの基礎技術"},{"id":123,"q":"定めた無料試用期間の後、継続使用の際に料金を支払うソフトウェアを何というか。","a":"シェアウェア","ch":"第２章 コンピュータの基礎技術"},{"id":124,"q":"フリーウェアとは何か。著者は著作権を放棄しているか。","a":"著者が金銭的諸権利を放棄したソフトウェア。著作権は放棄していない。","ch":"第２章 コンピュータの基礎技術"},{"id":125,"q":"プログラムの実行可能形式のデータを格納するファイルを何というか。","a":"プログラムファイル","ch":"第２章 コンピュータの基礎技術"},{"id":126,"q":"プログラムファイルで使用するデータを格納したファイルを何というか。","a":"データファイル","ch":"第２章 コンピュータの基礎技術"},{"id":127,"q":"マスターファイルとは更新される頻度が少なく継続的に使われるファイルである。具体例を挙げよ。","a":"社員マスター、商品マスター","ch":"第２章 コンピュータの基礎技術"},{"id":128,"q":"追加・変更などが頻繁に発生するデータを格納したファイルを何というか。","a":"トランザクションファイル","ch":"第２章 コンピュータの基礎技術"},{"id":129,"q":"トランザクションファイルの具体例を挙げよ。","a":"売上ファイル、売掛・請求ファイル","ch":"第３章 データベース"},{"id":130,"q":"文字データが格納されているファイルを何というか。","a":"テキストファイル","ch":"第２章 コンピュータの基礎技術"},{"id":131,"q":"文字以外のデータを含むファイルを何というか。","a":"バイナリファイル","ch":"第２章 コンピュータの基礎技術"},{"id":132,"q":"拡張子「.txt」のファイルはテキストファイルかバイナリファイルか。","a":"テキストファイル","ch":"第２章 コンピュータの基礎技術"},{"id":133,"q":"1行の長さ（文字数）が一定のファイルを何というか。","a":"固定長ファイル","ch":"第２章 コンピュータの基礎技術"},{"id":134,"q":"長さが行によって異なるファイルを何というか。","a":"可変長ファイル","ch":"第２章 コンピュータの基礎技術"},{"id":135,"q":"CSVファイルはテキストと可変長のどちらか。","a":"テキストファイル、かつ可変長ファイル","ch":"第２章 コンピュータの基礎技術"},{"id":136,"q":"CSVファイルでデータ間の区切りに使われる文字は何か。","a":"カンマ","ch":"第２章 コンピュータの基礎技術"},{"id":137,"q":"CSVファイルでレコード（行）間の区切りに使われるのは何か。","a":"改行","ch":"第２章 コンピュータの基礎技術"},{"id":138,"q":"圧縮したデータを伸長して元のデータを完全に復元できる方式を何というか。","a":"可逆圧縮方式","ch":"第２章 コンピュータの基礎技術"},{"id":139,"q":"元に戻らない圧縮方式を何というか。","a":"非可逆圧縮方式","ch":"第２章 コンピュータの基礎技術"},{"id":140,"q":"可逆圧縮と非可逆圧縮で圧縮率が高いのはどちらか。","a":"非可逆圧縮方式","ch":"第２章 コンピュータの基礎技術"},{"id":141,"q":"静止画像を色のついたドットを格子状に配置した集まりで表現する方式を何というか。","a":"ラスタ形式","ch":"第２章 コンピュータの基礎技術"},{"id":142,"q":"静止画像を点の座標・直線・曲線・色などを数値データで表現する形式を何というか。","a":"ベクタ形式","ch":"第２章 コンピュータの基礎技術"},{"id":143,"q":"非可逆圧縮・フルカラーでデジタル写真に適した静止画像形式は何か。","a":"JPEG","ch":"第２章 コンピュータの基礎技術"},{"id":144,"q":"可逆圧縮・256色カラー・透明色・アニメーション画像が可能な形式は何か。","a":"GIF","ch":"第２章 コンピュータの基礎技術"},{"id":145,"q":"可逆圧縮・フルカラーでWebでの使用を想定したGIFの発展版は何か。","a":"PNG","ch":"第２章 コンピュータの基礎技術"},{"id":146,"q":"可逆圧縮・フルカラーでタグを利用できる静止画像形式は何か。","a":"TIFF","ch":"第２章 コンピュータの基礎技術"},{"id":147,"q":"非圧縮で容量が大きい静止画像形式は何か。","a":"BMP","ch":"第２章 コンピュータの基礎技術"},{"id":148,"q":"非可逆圧縮で動画像MPEG-1の音声規格として開発された音声形式は何か。","a":"MP3","ch":"第２章 コンピュータの基礎技術"},{"id":149,"q":"非可逆圧縮でマイクロソフト社製品の標準音声圧縮方式・携帯音楽プレーヤーに使われる形式は何か。","a":"WMA","ch":"第２章 コンピュータの基礎技術"},{"id":150,"q":"非圧縮で良い音質を維持できる音声形式は何か。","a":"WAVE","ch":"第２章 コンピュータの基礎技術"},{"id":151,"q":"音楽の演奏情報をデータ化し電子楽器・パソコンで再生できる形式は何か。","a":"MIDI","ch":"第２章 コンピュータの基礎技術"},{"id":152,"q":"MPEG-1はどのような用途に使われるか。","a":"ビデオCD","ch":"第２章 コンピュータの基礎技術"},{"id":153,"q":"MPEG-2はどのような用途に使われるか。","a":"DVDや地上波放送","ch":"第２章 コンピュータの基礎技術"},{"id":154,"q":"MPEG-4は何を考慮した形式か。","a":"携帯端末での動画像送受信（モバイル通信）","ch":"第２章 コンピュータの基礎技術"},{"id":155,"q":"MPEG-7は動画データに何を付加してWeb検索できるようにしたか。","a":"メタデータ","ch":"第２章 コンピュータの基礎技術"},{"id":156,"q":"MP4はどの機関が標準化したデータ形式か。","a":"国際標準化機構（ISO）","ch":"第２章 コンピュータの基礎技術"},{"id":157,"q":"AVI・WMVはどの会社が開発したファイル形式か。","a":"マイクロソフト社","ch":"第２章 コンピュータの基礎技術"},{"id":158,"q":"AVIはDRMとストリーミング再生に対応しているか。","a":"対応していない","ch":"第２章 コンピュータの基礎技術"},{"id":159,"q":"WMVはDRMとストリーミング再生に対応しているか。","a":"対応している","ch":"第２章 コンピュータの基礎技術"},{"id":160,"q":"複数の文字列を1つの文字列で表現する手法を何というか。","a":"正規表現","ch":"第２章 コンピュータの基礎技術"},{"id":161,"q":"コンピュータが発している電気信号の一つひとつを何というか。","a":"ビット（bit）","ch":"第２章 コンピュータの基礎技術"},{"id":162,"q":"ビット8個をひとまとめにしたものを何というか。","a":"バイト（BYTE）","ch":"第２章 コンピュータの基礎技術"},{"id":163,"q":"電気信号8個で何通りの文字を表現できるか。","a":"256通り（2の8乗）","ch":"第２章 コンピュータの基礎技術"},{"id":164,"q":"ANSIが規格化した7ビットの文字コードを何というか。","a":"アスキー（ASCII）","ch":"第２章 コンピュータの基礎技術"},{"id":165,"q":"日本工業規格で規格化された7ビットと16ビットで構成される文字コードを何というか。","a":"JISコード","ch":"第２章 コンピュータの基礎技術"},{"id":166,"q":"JISコードの改良版ですべての文字を2バイトで表現するコードを何というか。","a":"Shift_JISコード","ch":"第２章 コンピュータの基礎技術"},{"id":167,"q":"UNIXで各国の文字を扱えるようにした文字コードを何というか。","a":"EUC","ch":"第２章 コンピュータの基礎技術"},{"id":168,"q":"世界中の文字にコード番号を付与している文字コードを何というか。","a":"Unicode","ch":"第２章 コンピュータの基礎技術"},{"id":169,"q":"Unicodeの数値変換を何というか。","a":"エンコード","ch":"第２章 コンピュータの基礎技術"},{"id":170,"q":"最もよく使われるエンコードは何か。","a":"UTF-8","ch":"第２章 コンピュータの基礎技術"},{"id":171,"q":"UTF-8で日本語は何バイトで表現されるか。","a":"3バイト","ch":"第２章 コンピュータの基礎技術"},{"id":172,"q":"コンピュータが理解できる言語は何か。","a":"機械語","ch":"第２章 コンピュータの基礎技術"},{"id":173,"q":"機械語の命令部分を文字にした言語を何というか。","a":"アセンブラ言語","ch":"第２章 コンピュータの基礎技術"},{"id":174,"q":"アセンブラ言語を機械語に翻訳することを何というか。","a":"アセンブル","ch":"第２章 コンピュータの基礎技術"},{"id":175,"q":"低水準言語とはどのような言語か。","a":"コンピュータには理解しやすいが、人間には理解しにくい言語","ch":"第２章 コンピュータの基礎技術"},{"id":176,"q":"高水準言語とはどのような言語か。","a":"コンピュータには理解しにくいが、人間には理解しやすい言語","ch":"第２章 コンピュータの基礎技術"},{"id":177,"q":"1行ずつ翻訳しながら実行する言語プロセッサを何というか。","a":"インタプリタ","ch":"第２章 コンピュータの基礎技術"},{"id":178,"q":"プログラム全体を機械語プログラムに一括変換する言語プロセッサを何というか。","a":"コンパイラ","ch":"第２章 コンピュータの基礎技術"},{"id":179,"q":"実行プログラム作成過程：原始プログラム→（　）→目的プログラム→（　）→実行プログラム","a":"コンパイル→リンク","ch":"第２章 コンピュータの基礎技術"},{"id":180,"q":"科学技術計算に適した言語FORTRANはどのような用途に適しているか。","a":"科学技術計算","ch":"第２章 コンピュータの基礎技術"},{"id":181,"q":"事務処理計算に適した言語COBOLはどのような用途に適しているか。","a":"事務処理計算","ch":"第２章 コンピュータの基礎技術"},{"id":182,"q":"構造が簡単で初心者にも習得しやすい言語は何か。","a":"BASIC","ch":"第２章 コンピュータの基礎技術"},{"id":183,"q":"ANSIが標準化した、CPU/OSに依存しない汎用性が高い言語は何か。","a":"C言語","ch":"第２章 コンピュータの基礎技術"},{"id":184,"q":"C言語にオブジェクト指向を取り入れた言語は何か。","a":"C++","ch":"第２章 コンピュータの基礎技術"},{"id":185,"q":"C言語にオブジェクト指向を取り入れ、JVMによりマルチプラットフォームを実現した言語は何か。","a":"Java","ch":"第２章 コンピュータの基礎技術"},{"id":186,"q":"C++とJavaを基に開発されたオブジェクト指向言語は何か。","a":"C#","ch":"第２章 コンピュータの基礎技術"},{"id":187,"q":"JavaScriptはHTML内でどのタグで記述するか。","a":"<script>タグ","ch":"第２章 コンピュータの基礎技術"},{"id":188,"q":"JavaScriptは動的・静的どちらのWeb作成に使われるか。","a":"動的","ch":"第２章 コンピュータの基礎技術"},{"id":189,"q":"JavaScriptの実行はサーバ側かクライアント側か。","a":"クライアント側","ch":"第２章 コンピュータの基礎技術"},{"id":190,"q":"Webアプリケーション開発に特化し、データベースとの連携が容易なスクリプト言語は何か。","a":"PHP","ch":"第７章 情報システム開発・運用"},{"id":191,"q":"テキスト処理に適したスクリプト言語は何か。","a":"Perl","ch":"第２章 コンピュータの基礎技術"},{"id":192,"q":"Perlを基に開発されオブジェクト指向を採用したスクリプト言語は何か。","a":"Ruby","ch":"第２章 コンピュータの基礎技術"},{"id":193,"q":"AIプログラミングに使われる、オブジェクト指向でライブラリが充実したスクリプト言語は何か。","a":"Python","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":194,"q":"データ解析・統計解析に適したスクリプト言語は何か。","a":"R","ch":"第２章 コンピュータの基礎技術"},{"id":195,"q":"マークアップ言語とはどのような言語か。","a":"データの構造や文字修飾を記述する言語","ch":"第２章 コンピュータの基礎技術"},{"id":196,"q":"マークアップ言語でデータの構造を表現するために使う文字列を何というか。","a":"タグ","ch":"第２章 コンピュータの基礎技術"},{"id":197,"q":"WebページのHTML文書のスタイルを設定する技術を何というか。","a":"CSS","ch":"第２章 コンピュータの基礎技術"},{"id":198,"q":"WebページのコンテンツをWebページの文字色・フォント等一元的に管理する技術を何というか。","a":"CMS","ch":"第２章 コンピュータの基礎技術"},{"id":199,"q":"プログラムをテキストで記述することなくプログラミングできる技術を何というか。","a":"ノーコード開発・ローコード開発","ch":"第７章 情報システム開発・運用"},{"id":200,"q":"プログラムを一切記述しない手法を何というか。","a":"ノーコード開発","ch":"第２章 コンピュータの基礎技術"},{"id":201,"q":"最低限のプログラムを記述する手法を何というか。","a":"ローコード開発","ch":"第２章 コンピュータの基礎技術"},{"id":202,"q":"視覚的なオブジェクトを組み合わせることでプログラミングできる言語を何というか。","a":"ビジュアルプログラミング","ch":"第７章 情報システム開発・運用"},{"id":203,"q":"階層型データベースはレコードの関係を何で表すか。","a":"親子関係（ツリー構造）","ch":"第３章 データベース"},{"id":204,"q":"階層型データベースの親レコードと子レコードの関係は1対何か。","a":"1対n","ch":"第３章 データベース"},{"id":205,"q":"ネットワーク型データベースはレコードの関係を何で表すか。","a":"網関係","ch":"第３章 データベース"},{"id":206,"q":"ネットワーク型データベースの親レコードと子レコードの関係はn対何か。","a":"n対n","ch":"第３章 データベース"},{"id":207,"q":"リレーショナルデータベースは何次元の表形式でデータを表現するか。","a":"2次元","ch":"第３章 データベース"},{"id":208,"q":"リレーショナルデータベースの表の横方向を何というか。","a":"行（レコード）","ch":"第３章 データベース"},{"id":209,"q":"リレーショナルデータベースの表の縦方向を何というか。","a":"列（フィールド）","ch":"第３章 データベース"},{"id":210,"q":"XMLデータベースとは何か。","a":"XMLデータをそのままの形で記録・検索できるデータベース","ch":"第３章 データベース"},{"id":211,"q":"全データを主記憶装置に格納する方式のデータベースを何というか。","a":"インメモリデータベース","ch":"第３章 データベース"},{"id":212,"q":"システム開発・運用に関する資源を一元管理するデータベースを何というか。","a":"リポジトリ","ch":"第３章 データベース"},{"id":213,"q":"多様なデータを加工せずそのままの形式で格納するデータベースを何というか。","a":"データレイク","ch":"第３章 データベース"},{"id":214,"q":"NoSQLデータベースとは何の総称か。","a":"リレーショナルデータベース以外のデータベースの総称","ch":"第３章 データベース"},{"id":215,"q":"NoSQLデータベースのメリットは何か。","a":"大量・多様なデータの高速処理が可能","ch":"第３章 データベース"},{"id":216,"q":"NoSQLデータベースのデメリットは何か。","a":"複雑な検索・分析には不向き","ch":"第３章 データベース"},{"id":217,"q":"データを識別するキーとバリューだけで構成するNoSQLデータベースの型は何か。","a":"キーバリュー型","ch":"第３章 データベース"},{"id":218,"q":"キーバリュー型に複数のカラムを追加したNoSQLデータベースの型は何か。","a":"カラム型","ch":"第３章 データベース"},{"id":219,"q":"ドキュメント形式で格納するNoSQLデータベースの型は何か。","a":"ドキュメント型","ch":"第３章 データベース"},{"id":220,"q":"ノード・エッジ・プロパティの3要素でデータ間の関係性を表現するNoSQLの型は何か。","a":"グラフ型","ch":"第３章 データベース"},{"id":221,"q":"3層スキーマのうち、DBMSから見たデータベースの姿を何というか。","a":"内部スキーマ","ch":"第３章 データベース"},{"id":222,"q":"内部スキーマの設計を何というか。","a":"物理設計","ch":"第３章 データベース"},{"id":223,"q":"3層スキーマのうち、開発者から見たデータベースの姿を何というか。","a":"概念スキーマ","ch":"第３章 データベース"},{"id":224,"q":"概念スキーマの設計を何というか。","a":"論理設計","ch":"第３章 データベース"},{"id":225,"q":"3層スキーマのうち、ユーザから見たデータベースの姿を何というか。","a":"外部スキーマ","ch":"第３章 データベース"},{"id":226,"q":"表から条件に合った行を取り出す操作を何というか。","a":"選択","ch":"第２章 コンピュータの基礎技術"},{"id":227,"q":"表から条件に合った列を取り出す操作を何というか。","a":"射影","ch":"第２章 コンピュータの基礎技術"},{"id":228,"q":"複数の表を結びつける操作を何というか。","a":"結合","ch":"第２章 コンピュータの基礎技術"},{"id":229,"q":"選択・射影・結合を総称して何演算というか。","a":"関係演算","ch":"第３章 データベース"},{"id":230,"q":"トランザクションとは何か。","a":"データ操作における、これ以上分けることができない処理の単位","ch":"第３章 データベース"},{"id":231,"q":"トランザクションが完全に実行されるかまったく実行されないかのいずれかで終了する特性を何というか。","a":"原子性（Atomicity）","ch":"第３章 データベース"},{"id":232,"q":"トランザクションの実行結果にかかわらずデータベースの整合性が保たれる特性を何というか。","a":"一貫性・整合性（Consistency）","ch":"第３章 データベース"},{"id":233,"q":"他のトランザクションの影響を受けない特性を何というか。","a":"独立性（Isolation）","ch":"第３章 データベース"},{"id":234,"q":"トランザクションの結果が障害が発生しても失われない特性を何というか。","a":"持続性・耐久性（Durability）","ch":"第３章 データベース"},{"id":235,"q":"データベースの検索速度を向上させる方法で、インデックスはどのような要素で構成されるか。","a":"キー項目と格納位置","ch":"第３章 データベース"},{"id":236,"q":"特定の表への操作を契機としてあらかじめ定義した処理を自動的に実行する仕組みを何というか。","a":"トリガ","ch":"第２章 コンピュータの基礎技術"},{"id":237,"q":"同じシステム環境を同一または遠隔地に2つ作りデータをリアルタイムに複製する仕組みを何というか。","a":"レプリケーション","ch":"第２章 コンピュータの基礎技術"},{"id":238,"q":"全部のデータを複製するバックアップを何というか。","a":"フルバックアップ","ch":"第３章 データベース"},{"id":239,"q":"直前のフルバックアップからの変更データを複製するバックアップを何というか。","a":"差分バックアップ","ch":"第３章 データベース"},{"id":240,"q":"直前のバックアップからの変更データを複製するバックアップを何というか。","a":"増分バックアップ","ch":"第３章 データベース"},{"id":241,"q":"データベースの更新履歴を記録するファイルを何というか（別名も）。","a":"ログファイル（別名：ジャーナルファイル）","ch":"第３章 データベース"},{"id":242,"q":"ログファイルの更新前情報を使って障害発生前の状態に戻す処理を何というか。","a":"ロールバック","ch":"第３章 データベース"},{"id":243,"q":"ログファイルの更新後情報を使って障害発生前の状態に戻す処理を何というか。","a":"ロールフォワード","ch":"第３章 データベース"},{"id":244,"q":"処理対象データに鍵をかけて他のトランザクションがアクセスできなくする方式を何というか。","a":"ロック方式","ch":"第３章 データベース"},{"id":245,"q":"他のトランザクションからの更新・削除・占有ロックは禁止、参照・共有ロックを許可するロックを何というか。","a":"共有ロック","ch":"第３章 データベース"},{"id":246,"q":"他のトランザクションからの全てのアクセスを禁止するロックを何というか。","a":"占有ロック","ch":"第３章 データベース"},{"id":247,"q":"複数のトランザクションがお互いのロック解除を待つ膠着状態を何というか。","a":"デッドロック","ch":"第３章 データベース"},{"id":248,"q":"スター型LANの制御装置を中心に複数のコンピュータを放射線状に接続した場合の制御装置は何か。","a":"ハブ","ch":"第４章 通信ネットワーク"},{"id":249,"q":"ハブを介した接続方式を何というか。","a":"カスケード接続","ch":"第４章 通信ネットワーク"},{"id":250,"q":"LAN内で複数のコンピュータがデータを同時に送信した場合に生じるものを何というか。","a":"衝突（コリジョン）","ch":"第４章 通信ネットワーク"},{"id":251,"q":"スター型LANに使われているアクセス制御方式を何というか。","a":"CSMA/CD方式","ch":"第４章 通信ネットワーク"},{"id":252,"q":"衝突が起きた場合に一定時間経過後に再送信するアクセス制御方式を何というか。","a":"CSMA/CD方式","ch":"第２章 コンピュータの基礎技術"},{"id":253,"q":"リング型LANに使われているアクセス制御方式を何というか。","a":"トークンパッシング方式","ch":"第４章 通信ネットワーク"},{"id":254,"q":"トークンパッシング方式の送信許可信号を何というか。","a":"トークン","ch":"第４章 通信ネットワーク"},{"id":255,"q":"送信先情報と送信データを付加したトークンを何というか。","a":"ビジートークン","ch":"第２章 コンピュータの基礎技術"},{"id":256,"q":"送信先情報等が付加されていないトークンを何というか。","a":"フリートークン","ch":"第２章 コンピュータの基礎技術"},{"id":257,"q":"CSMA/CD方式を採用している有線LANの規格を何というか。","a":"イーサネット（IEEE802.3）","ch":"第４章 通信ネットワーク"},{"id":258,"q":"トークンパッシング方式を採用している有線LANの規格を何というか。","a":"トークンリングLAN","ch":"第４章 通信ネットワーク"},{"id":259,"q":"パソコン等をLAN接続するための基板状の機器を何というか。","a":"LANカード","ch":"第４章 通信ネットワーク"},{"id":260,"q":"LANカードは工場出荷時に何が付与されているか。","a":"MACアドレス","ch":"第４章 通信ネットワーク"},{"id":261,"q":"スター型LANの中心に位置する集線装置を何というか。","a":"ハブ","ch":"第４章 通信ネットワーク"},{"id":262,"q":"伝送データを全ての端末に送信するハブを何というか。","a":"リピーターハブ","ch":"第４章 通信ネットワーク"},{"id":263,"q":"送信先だけに送信するハブを何というか。","a":"スイッチングハブ","ch":"第４章 通信ネットワーク"},{"id":264,"q":"スイッチングハブと同じ機能を持つがLAN間接続に使われる機器を何というか。","a":"ブリッジ","ch":"第４章 通信ネットワーク"},{"id":265,"q":"異なるネットワーク同士を接続する機器や技術の総称を何というか。","a":"ゲートウェイ","ch":"第２章 コンピュータの基礎技術"},{"id":266,"q":"LANとインターネットとの接続に使われる機器を何というか。","a":"ルータ","ch":"第４章 通信ネットワーク"},{"id":267,"q":"無線LANの規格シリーズを何というか。","a":"IEEE802.11","ch":"第４章 通信ネットワーク"},{"id":268,"q":"近年のIEEE802.11に採用されている高速化技術を2つ挙げよ。","a":"マルチボンディング、マルチユーザMIMO","ch":"第４章 通信ネットワーク"},{"id":269,"q":"2.4GHz帯の無線LANの特徴を挙げよ。","a":"遠くまで届くが、電波干渉を受けやすい","ch":"第４章 通信ネットワーク"},{"id":270,"q":"5GHz帯の無線LANの特徴を挙げよ。","a":"遠くまで届かないが、電波干渉を受けにくい","ch":"第４章 通信ネットワーク"},{"id":271,"q":"Bluetoothの周波数帯域は何GHzか。","a":"2.4GHz","ch":"第４章 通信ネットワーク"},{"id":272,"q":"Bluetoothの電波干渉を軽減する機能を何というか。","a":"周波数ホッピング","ch":"第４章 通信ネットワーク"},{"id":273,"q":"赤外線を使った無線通信規格を何というか。","a":"IrDA","ch":"第２章 コンピュータの基礎技術"},{"id":274,"q":"IEEE802シリーズに準拠した商標名を何というか。","a":"Wi-Fi","ch":"第４章 通信ネットワーク"},{"id":275,"q":"ルータ機能をオンにしたモードを何というか。","a":"ルータモード","ch":"第４章 通信ネットワーク"},{"id":276,"q":"ルータ機能をオフにしたモードを何というか。","a":"ブリッジモード","ch":"第４章 通信ネットワーク"},{"id":277,"q":"アクセスポイントを介して接続するモードを何というか。","a":"インフラストラクチャモード","ch":"第４章 通信ネットワーク"},{"id":278,"q":"アクセスポイントを介さず端末同士が直接通信するモードを何というか。","a":"アドホックモード","ch":"第４章 通信ネットワーク"},{"id":279,"q":"無線LANのアクセス制御方式を何というか。","a":"CSMA/CA方式","ch":"第４章 通信ネットワーク"},{"id":280,"q":"プライベートIPアドレスとグローバルIPアドレスの変換を1対1で行う技術を何というか。","a":"NAT","ch":"第４章 通信ネットワーク"},{"id":281,"q":"1つのグローバルIPアドレスに対して複数のプライベートIPアドレスを割り当てる技術を何というか。","a":"NAPT（IPマスカレード）","ch":"第４章 通信ネットワーク"},{"id":282,"q":"NAPTでLAN内の端末の識別は何で行うか。","a":"ポート番号","ch":"第４章 通信ネットワーク"},{"id":283,"q":"URLの構成要素として、https://www.kec.ne.jp/shindanshi/aaaaa.htmlの各部分の名称を答えよ。","a":"https（プロトコル名）、www（ホスト名）、kec.ne.jp（ドメイン名）、shindanshi（ディレクトリ名）、aaaaa.html（ファイル名）","ch":"第４章 通信ネットワーク"},{"id":284,"q":"URLの文字列とIPアドレスを対応づける技術を何というか。","a":"DNS","ch":"第４章 通信ネットワーク"},{"id":285,"q":"IPアドレス等のインターネット接続に必要な情報を動的に割り当てる技術を何というか。","a":"DHCP","ch":"第４章 通信ネットワーク"},{"id":286,"q":"DHCPが動的に割り当てる情報を挙げよ。","a":"割り当て対象端末のIPアドレス、サブネットマスク、デフォルトゲートウェイ、DNSサーバのIPアドレス","ch":"第４章 通信ネットワーク"},{"id":287,"q":"TCP/IPはインターネットで標準的に使われるプロトコルの何か。","a":"総称","ch":"第４章 通信ネットワーク"},{"id":288,"q":"TCP/IPのアプリケーション層に対応するOSI参照モデルの層は何か。","a":"アプリケーション層・プレゼンテーション層・セッション層","ch":"第４章 通信ネットワーク"},{"id":289,"q":"TCP/IPのトランスポート層に対応するOSI参照モデルの層は何か。","a":"トランスポート層","ch":"第４章 通信ネットワーク"},{"id":290,"q":"TCP/IPのインターネット層に対応するOSI参照モデルの層は何か。","a":"ネットワーク層","ch":"第４章 通信ネットワーク"},{"id":291,"q":"TCP/IPのネットワークインターフェイス層に対応するOSI参照モデルの層は何か。","a":"データリンク層・物理層","ch":"第４章 通信ネットワーク"},{"id":292,"q":"端末からメールサーバへの送信・メールサーバ間のメール送信を規定するプロトコルを何というか。","a":"SMTP","ch":"第２章 コンピュータの基礎技術"},{"id":293,"q":"電子メールの受信で端末にメールをダウンロードする仕組みを規定するプロトコルを何というか。","a":"POP3","ch":"第２章 コンピュータの基礎技術"},{"id":294,"q":"メールサーバ側のメールを直接閲覧する仕組みを規定するプロトコルを何というか。","a":"IMAP","ch":"第２章 コンピュータの基礎技術"},{"id":295,"q":"電子メールでテキスト以外のデータの扱いを規定するプロトコルを何というか。","a":"MIME","ch":"第２章 コンピュータの基礎技術"},{"id":296,"q":"MIMEに暗号化等のセキュリティ機能を強化した規定を何というか。","a":"S/MIME","ch":"第６章 セキュリティ対策"},{"id":297,"q":"WebブラウザとWebサーバ間のデータ送受信を規定するプロトコルを何というか。","a":"HTTP","ch":"第２章 コンピュータの基礎技術"},{"id":298,"q":"ファイル転送を規定するプロトコルを何というか。","a":"FTP","ch":"第２章 コンピュータの基礎技術"},{"id":299,"q":"インターネットを介した接続機器の管理を規定するプロトコルを何というか。","a":"SNMP","ch":"第２章 コンピュータの基礎技術"},{"id":300,"q":"インターネットを介した接続機器の遠隔操作を規定するプロトコルを何というか。","a":"Telnet","ch":"第２章 コンピュータの基礎技術"},{"id":301,"q":"端末の内部時計の同期処理を規定するプロトコルを何というか。","a":"NTP","ch":"第２章 コンピュータの基礎技術"},{"id":302,"q":"ネットワーク対応プリンタの制御を規定するプロトコルを何というか。","a":"LPR","ch":"第２章 コンピュータの基礎技術"},{"id":303,"q":"Webサービス間のデータ受け渡し・連携を規定するプロトコルを何というか。","a":"SOAP","ch":"第２章 コンピュータの基礎技術"},{"id":304,"q":"TCPはコネクションを確立して何を行うプロトコルか。","a":"受信確認とエラー時の再送信","ch":"第４章 通信ネットワーク"},{"id":305,"q":"TCPの信頼性と通信速度の特徴を答えよ。","a":"信頼性は高いが通信速度は遅い","ch":"第５章 情報システム構成技術"},{"id":306,"q":"UDPはコネクションを確立するか。","a":"確立しない","ch":"第４章 通信ネットワーク"},{"id":307,"q":"UDPの信頼性と通信速度の特徴を答えよ。","a":"信頼性は低いが通信速度は速い","ch":"第５章 情報システム構成技術"},{"id":308,"q":"TCP/UDPで相手先ホストを識別するものは何か。","a":"IPアドレス","ch":"第４章 通信ネットワーク"},{"id":309,"q":"TCP/UDPでアプリケーションを識別する番号を何というか。","a":"ポート番号","ch":"第４章 通信ネットワーク"},{"id":310,"q":"標準として割り当てられているポート番号を何というか。","a":"ウェルノウンポート番号","ch":"第４章 通信ネットワーク"},{"id":311,"q":"IPが行う2つの処理を答えよ。","a":"アドレッシング（IPアドレスの割り当て）、ルーティング（経路選択）","ch":"第２章 コンピュータの基礎技術"},{"id":312,"q":"ICMPとはどのようなプロトコルか。","a":"ネットワーク上の異常を検知しエラーメッセージを転送するプロトコル","ch":"第４章 通信ネットワーク"},{"id":313,"q":"ICMPで異常を検知する手法を2つ挙げよ。","a":"ping、traceroute","ch":"第４章 通信ネットワーク"},{"id":314,"q":"ARPはIPアドレスを基に何を取得するプロトコルか。","a":"MACアドレス","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":315,"q":"クッキー（Cookie）とは何か。","a":"サーバ側の指示によりクライアント側にユーザ情報等のデータを保存する技術","ch":"第４章 通信ネットワーク"},{"id":316,"q":"AjaxとはJavaScriptでサーバ側と何を行う技術か。","a":"非同期通信","ch":"第４章 通信ネットワーク"},{"id":317,"q":"CGIとは外部プログラムを実行してその結果をWebブラウザに返す仕組みである。主な用途を挙げよ。","a":"アクセスカウンター、パスワードによるアクセス制御、Webチャット、掲示板、動的ページ生成","ch":"第４章 通信ネットワーク"},{"id":318,"q":"物理的な移動体通信インフラを自社で保有して通信サービスを提供する事業者を何というか。","a":"MNO（移動体通信事業者）","ch":"第２章 コンピュータの基礎技術"},{"id":319,"q":"物理的な移動体通信インフラを自社で保有せずインフラを借りて通信サービスを提供する事業者を何というか。","a":"MVNO（仮想移動体通信事業者）","ch":"第２章 コンピュータの基礎技術"},{"id":320,"q":"どの通信事業者のSIMカードでも通信を行うことができる端末を何というか。","a":"SIMフリー端末","ch":"第２章 コンピュータの基礎技術"},{"id":321,"q":"専用線のメリットを3つ挙げよ。","a":"安定した通信速度、大容量の送受信、高いセキュリティ確保","ch":"第２章 コンピュータの基礎技術"},{"id":322,"q":"VPNとは何か。","a":"不特定多数のユーザで共有する回線を仮想的な専用線として利用する技術","ch":"第４章 通信ネットワーク"},{"id":323,"q":"VPNが採用している技術を3つ挙げよ。","a":"トンネリング技術、暗号化技術、認証技術","ch":"第４章 通信ネットワーク"},{"id":324,"q":"ランダムネットワークの特徴を挙げよ。","a":"すべてのノードが同じ確率でリンクするため、各ノードが持つリンクの数に極端な差がない","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":325,"q":"スケールフリーネットワークの特徴を挙げよ。","a":"大多数のノードは少ないリンクしか持たないが、ごく少数のノードは多くのリンクを持ちネットワークの中心となる","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":326,"q":"特定のネットワークにアクセスが集中する現象を何というか。","a":"輻輳（ふくそう）","ch":"第２章 コンピュータの基礎技術"},{"id":327,"q":"ユーザが転送要求してから応答が返されるまでの通信の遅延時間を何というか。","a":"レイテンシ","ch":"第２章 コンピュータの基礎技術"},{"id":328,"q":"レイテンシの揺らぎを何というか。","a":"ジッタ","ch":"第４章 通信ネットワーク"},{"id":329,"q":"ユーザの要求ごとにその都度処理する形態を何というか。","a":"リアルタイム処理","ch":"第２章 コンピュータの基礎技術"},{"id":330,"q":"一定期間ごと・一定量ごとにまとめて処理する形態を何というか。","a":"バッチ処理","ch":"第２章 コンピュータの基礎技術"},{"id":331,"q":"複数のコンピュータをネットワークに接続し分散して処理する形態を何というか。","a":"分散処理","ch":"第９章 統計解析"},{"id":332,"q":"1台のコンピュータが全ての処理を行う形態を何というか。","a":"集中処理","ch":"第２章 コンピュータの基礎技術"},{"id":333,"q":"集中処理のメリット・デメリットを答えよ。","a":"メリット：運用管理・保守が容易、データの一貫性を保ちやすい。デメリット：ホストコンピュータが故障するとシステム全体が停止、負荷が大きくなると処理速度が低下","ch":"第５章 情報システム構成技術"},{"id":334,"q":"分散処理のメリット・デメリットを答えよ。","a":"メリット：1台が故障しても全体は稼働できる、コンピュータ増設で負荷分散できる。デメリット：運用管理・保守に手間がかかる、データの整合性を保つのが困難","ch":"第９章 統計解析"},{"id":335,"q":"クライアントサーバシステムの主なサーバの種類を6つ挙げよ。","a":"ファイルサーバ、プリントサーバ、Webサーバ、メールサーバ、データベースサーバ、アプリケーションサーバ","ch":"第５章 情報システム構成技術"},{"id":336,"q":"クライアントサーバシステムの構成に必要な3つの層を挙げよ。","a":"データ層、ファンクション層、プレゼンテーション層","ch":"第５章 情報システム構成技術"},{"id":337,"q":"2層アーキテクチャにおけるクライアントを何というか。","a":"ファットクライアント","ch":"第５章 情報システム構成技術"},{"id":338,"q":"3層アーキテクチャにおけるクライアントを何というか。","a":"シンクライアント","ch":"第５章 情報システム構成技術"},{"id":339,"q":"NASはどこに直接接続できるか。","a":"LAN","ch":"第５章 情報システム構成技術"},{"id":340,"q":"NASのメリットとデメリットを答えよ。","a":"メリット：既存のLANを利用できるので導入コストが低い。デメリット：通信データ量が多くなるとアクセス速度が低下する","ch":"第５章 情報システム構成技術"},{"id":341,"q":"SANのメリットとデメリットを答えよ。","a":"メリット：専用ネットワークのため高速アクセスが可能。デメリット：専用スイッチや回線が必要で導入コストが高い","ch":"第５章 情報システム構成技術"},{"id":342,"q":"障害発生時に情報システム運用を継続できるようにするシステム設計の概念の総称を何というか。","a":"フォールトトレランス","ch":"第２章 コンピュータの基礎技術"},{"id":343,"q":"障害発生時にシステムの全面停止を避け機能を低下させても運用を継続させる設計概念を何というか。","a":"フェイルソフト","ch":"第２章 コンピュータの基礎技術"},{"id":344,"q":"障害発生時に影響範囲を最小限にとどめユーザにとって安全側に制御する設計概念を何というか。","a":"フェイルセーフ","ch":"第２章 コンピュータの基礎技術"},{"id":345,"q":"誤った操作があっても情報システムに異常が起こらない仕組みを何というか。","a":"フールプルーフ","ch":"第２章 コンピュータの基礎技術"},{"id":346,"q":"障害部分を運用から切り離し機能・性能を限定して運用を継続する仕組みを何というか。","a":"フォールバック","ch":"第２章 コンピュータの基礎技術"},{"id":347,"q":"システム障害の際、待機系システムに処理を自動的に切り替えてシステム運用を継続する仕組みを何というか。","a":"フェイルオーバー","ch":"第２章 コンピュータの基礎技術"},{"id":348,"q":"障害を情報システム内部にとどめユーザ側に影響を及ぼさないように「障害を隠蔽」する仕組みを何というか。","a":"フォールトマスキング","ch":"第２章 コンピュータの基礎技術"},{"id":349,"q":"UPSとは何の略で、どのような装置か。","a":"Uninterruptible Power Supply（無停電電源装置）。停電時に一定時間電力を供給する","ch":"第５章 情報システム構成技術"},{"id":350,"q":"補助記憶装置を2重化し同一データを格納する仕組みを何というか。","a":"ミラーリング","ch":"第２章 コンピュータの基礎技術"},{"id":351,"q":"ミラーリングにディスクコントローラも2重化する仕組みを何というか。","a":"デュプレキシング","ch":"第５章 情報システム構成技術"},{"id":352,"q":"保存するデータを複数のハードディスク装置に分割して保存する技術を何というか。","a":"ストライピング","ch":"第２章 コンピュータの基礎技術"},{"id":353,"q":"障害時におけるデータ復旧用の冗長データを何というか。","a":"パリティ","ch":"第２章 コンピュータの基礎技術"},{"id":354,"q":"RAID0の特徴を答えよ。","a":"ストライピングのみ採用（高速化技術）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":355,"q":"RAID1の特徴を答えよ。","a":"ミラーリングのみ採用（信頼性向上技術）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":356,"q":"RAID5の特徴を答えよ。","a":"ストライピングとパリティを採用（1台の障害に対応）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":357,"q":"RAID6の特徴を答えよ。","a":"ストライピングとパリティを採用（2台までの障害に対応）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":358,"q":"現用系システムに障害が発生した際に待機系システムに切り替えて運用を継続する仕組みを何というか。","a":"デュプレックスシステム","ch":"第２章 コンピュータの基礎技術"},{"id":359,"q":"情報システム全部を2重化し2つの系統が同じ処理を行い処理結果を照合する仕組みを何というか。","a":"デュアルシステム","ch":"第２章 コンピュータの基礎技術"},{"id":360,"q":"システムを複数系統用意して処理を分担し負荷を分散する仕組みを何というか。","a":"ロードシェアシステム","ch":"第９章 統計解析"},{"id":361,"q":"バックアップデータを活用してシステムを復元できるよう遠隔地に設置する予備施設を何というか。","a":"ウォームサイト","ch":"第３章 データベース"},{"id":362,"q":"コールドスタンバイの電源と起動状態はどのようか。","a":"電源オフ、起動しない","ch":"第５章 情報システム構成技術"},{"id":363,"q":"ウォームスタンバイの電源と起動状態はどのようか。","a":"電源オン、起動しない","ch":"第５章 情報システム構成技術"},{"id":364,"q":"ホットスタンバイの電源と起動状態はどのようか。","a":"電源オン、起動する","ch":"第５章 情報システム構成技術"},{"id":365,"q":"デュプレックスシステムの中で待機系への切り替えが最も早い方式はどれか。","a":"ホットスタンバイ方式","ch":"第５章 情報システム構成技術"},{"id":366,"q":"単位時間当たりに処理できる仕事量を何というか。","a":"スループット","ch":"第２章 コンピュータの基礎技術"},{"id":367,"q":"データ処理の開始から終了までの時間を何というか。","a":"レスポンスタイム","ch":"第２章 コンピュータの基礎技術"},{"id":368,"q":"データ入力の開始からデータ出力の終了までの時間を何というか。","a":"ターンアラウンドタイム","ch":"第２章 コンピュータの基礎技術"},{"id":369,"q":"平均故障間隔（MTBF）の計算式を答えよ。","a":"MTBF = 稼働時間の合計 ÷ 故障回数","ch":"第５章 情報システム構成技術"},{"id":370,"q":"平均修理時間（MTTR）の計算式を答えよ。","a":"MTTR = 修理時間の合計 ÷ 故障回数","ch":"第５章 情報システム構成技術"},{"id":371,"q":"稼働率の計算式を答えよ。","a":"稼働率 = MTBF ÷ （MTBF + MTTR）","ch":"第５章 情報システム構成技術"},{"id":372,"q":"RASISの「R」は何性か、また評価指標は何か。","a":"信頼性。評価指標はMTBF（大きいほど高い）","ch":"第５章 情報システム構成技術"},{"id":373,"q":"RASISの「A」は何性か、また評価指標は何か。","a":"可用性。評価指標は稼働率（大きいほど高い）","ch":"第５章 情報システム構成技術"},{"id":374,"q":"RASISの最初の「S」は何性か、また評価指標は何か。","a":"保守性。評価指標はMTTR（小さいほど高い）","ch":"第５章 情報システム構成技術"},{"id":375,"q":"RASISの「I」は何性か。","a":"完全（保全）性。データが矛盾することなく一貫性を保っているか","ch":"第５章 情報システム構成技術"},{"id":376,"q":"RASISの最後の「S」は何性か。","a":"安全（機密）性。システムのセキュリティがどれだけ保たれているか","ch":"第５章 情報システム構成技術"},{"id":377,"q":"サーバの台数を増やすことを何というか。","a":"スケールアウト","ch":"第２章 コンピュータの基礎技術"},{"id":378,"q":"サーバ1台の性能を上げることを何というか。","a":"スケールアップ","ch":"第２章 コンピュータの基礎技術"},{"id":379,"q":"複数のコンピュータを接続し1台の高性能コンピュータのように利用する技術を2つ挙げよ。","a":"クラスタリング、グリッドコンピューティング","ch":"第２章 コンピュータの基礎技術"},{"id":380,"q":"ミラーサイトとは何か。","a":"同一のWebコンテンツを持つ別のWebサイト","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":381,"q":"情報セキュリティの3要素を挙げよ。","a":"機密性（Confidentiality）、完全性（Integrity）、可用性（Availability）","ch":"第６章 セキュリティ対策"},{"id":382,"q":"情報セキュリティの拡張要素「真正性」とは何か。","a":"情報にアクセスする人や組織が正しい人間・組織かどうかを検証しなりすましでないことを証明できること","ch":"第６章 セキュリティ対策"},{"id":383,"q":"情報セキュリティの拡張要素「責任追跡性」とは何か。","a":"ユーザからのアクセスを記録として残しアクセス履歴を追跡・調査できること","ch":"第６章 セキュリティ対策"},{"id":384,"q":"情報セキュリティの拡張要素「否認防止」とは何か。","a":"障害が発生した際に障害の要因となった人がその証跡を隠滅できなくすること","ch":"第６章 セキュリティ対策"},{"id":385,"q":"情報セキュリティの拡張要素「信頼性」とは何か。","a":"情報システムが設計した意図に沿って動作していること","ch":"第６章 セキュリティ対策"},{"id":386,"q":"ゼロトラストの考え方を説明せよ。","a":"内側も外側も信頼できないという考え方（従来は内側を信頼、外側を信頼できないとした）","ch":"第６章 セキュリティ対策"},{"id":387,"q":"CVEとは何か。","a":"システムやソフトウェアの脆弱性に識別番号を付与しリスト化して公開する仕組み","ch":"第６章 セキュリティ対策"},{"id":388,"q":"CVSSとは何か。","a":"情報システムの脆弱性に対するオープンで汎用的な評価手法","ch":"第６章 セキュリティ対策"},{"id":389,"q":"コンピュータウィルス等の有害なソフトウェアの総称を何というか。","a":"マルウェア","ch":"第６章 セキュリティ対策"},{"id":390,"q":"データを暗号化等で利用不可能にして金銭を要求する攻撃を何というか。","a":"ランサムウェア","ch":"第６章 セキュリティ対策"},{"id":391,"q":"個人情報等のデータをユーザが気づかないように収集・外部に送信する攻撃を何というか。","a":"スパイウェア","ch":"第２章 コンピュータの基礎技術"},{"id":392,"q":"偽メールで企業に金銭的被害をもたらす攻撃を何というか。","a":"ビジネスメール詐欺","ch":"第２章 コンピュータの基礎技術"},{"id":393,"q":"特定の個人や組織を狙った攻撃を何というか。","a":"標的型攻撃","ch":"第２章 コンピュータの基礎技術"},{"id":394,"q":"本物の企業を装い個人情報を盗み出す攻撃を何というか。","a":"フィッシング攻撃","ch":"第２章 コンピュータの基礎技術"},{"id":395,"q":"脆弱性を解消する対策が提供される前に行われるサイバー攻撃を何というか。","a":"ゼロデイ攻撃","ch":"第６章 セキュリティ対策"},{"id":396,"q":"コンピュータウィルスの3つの機能を挙げよ。","a":"自己伝染機能、潜伏機能、発病機能","ch":"第６章 セキュリティ対策"},{"id":397,"q":"不要物等から各種情報を取得する手口を何というか。","a":"スキャベンジング","ch":"第２章 コンピュータの基礎技術"},{"id":398,"q":"他人の画面を盗み見て各種情報を取得する手口を何というか。","a":"ショルダーハッキング（ショルダーサーフィン）","ch":"第２章 コンピュータの基礎技術"},{"id":399,"q":"通信技術を使用しない方法で各種情報を不正に取得する手口の総称を何というか。","a":"ソーシャルエンジニアリング","ch":"第２章 コンピュータの基礎技術"},{"id":400,"q":"共通鍵暗号方式とは何か。","a":"暗号化と復号に同一の鍵を用いる方式","ch":"第６章 セキュリティ対策"},{"id":401,"q":"共通鍵暗号方式のアルゴリズム名を2つ挙げよ。","a":"DES、AES","ch":"第６章 セキュリティ対策"},{"id":402,"q":"通信相手が10人の場合、共通鍵暗号方式で用意する鍵の数は何個か。","a":"10個","ch":"第６章 セキュリティ対策"},{"id":403,"q":"公開鍵暗号方式とは何か。","a":"暗号化と復号に異なる鍵を用いる方式","ch":"第６章 セキュリティ対策"},{"id":404,"q":"公開鍵暗号方式で送信者はどのように暗号化するか。","a":"受信者の公開鍵で平文を暗号化する","ch":"第６章 セキュリティ対策"},{"id":405,"q":"公開鍵暗号方式で受信者はどのように復号するか。","a":"受信者自身の秘密鍵で復号する","ch":"第６章 セキュリティ対策"},{"id":406,"q":"公開鍵暗号方式のアルゴリズムを1つ挙げよ。","a":"RSA","ch":"第６章 セキュリティ対策"},{"id":407,"q":"セッション鍵暗号方式（ハイブリッド方式）の手順を説明せよ。","a":"①送信者が平文を共通鍵で暗号化②送信者が共通鍵を受信者の公開鍵で暗号化③受信者が受信者の秘密鍵で共通鍵を復号④共通鍵で暗号文を復号","ch":"第６章 セキュリティ対策"},{"id":408,"q":"DMZとは何か。","a":"インターネットに公開するサーバを内部ネットワークから分離した領域","ch":"第６章 セキュリティ対策"},{"id":409,"q":"DMZに置くサーバにはどのようなものがあるか。","a":"Webサーバ、メールサーバなど","ch":"第６章 セキュリティ対策"},{"id":410,"q":"ファイアウォールの主な機能を2つ挙げよ。","a":"パケットフィルタリング機能、プロキシサーバ機能","ch":"第６章 セキュリティ対策"},{"id":411,"q":"パケットフィルタリングとは何を調べて不正アクセスを判断する機能か。","a":"パケットのIPアドレスとポート番号","ch":"第６章 セキュリティ対策"},{"id":412,"q":"プロキシサーバの「プロキシ」はどういう意味か。","a":"代理","ch":"第６章 セキュリティ対策"},{"id":413,"q":"プロキシサーバのキャッシュ機能とは何か。","a":"一度アクセスしたWebページデータを保存し2度目以降のアクセス時に保存データを返して高速化する機能","ch":"第６章 セキュリティ対策"},{"id":414,"q":"プロキシサーバのURLフィルタリング機能とは何か。","a":"詐欺サイト等の不適切なWebサイトをブロックする機能","ch":"第６章 セキュリティ対策"},{"id":415,"q":"IDSとは何か。","a":"侵入検知システム（不正アクセスのシグネチャに基づき不正アクセスを検知するシステム）","ch":"第６章 セキュリティ対策"},{"id":416,"q":"IPSとは何か。","a":"侵入防止システム","ch":"第６章 セキュリティ対策"},{"id":417,"q":"EPPとEDRの違いを答えよ。","a":"EPPは侵入を防ぐ仕組み、EDRは侵入を前提に検知・対処する仕組み","ch":"第６章 セキュリティ対策"},{"id":418,"q":"認証には何があるか3つ挙げよ。","a":"ユーザ認証、メッセージ認証、サーバ認証","ch":"第２章 コンピュータの基礎技術"},{"id":419,"q":"ワンタイムパスワードとは何か。","a":"1回のみ使えるパスワードを動的に生成し利用者の認証を行う技術","ch":"第６章 セキュリティ対策"},{"id":420,"q":"バイオメトリクス認証とは何か。","a":"ユーザの身体的特徴で認証する技術","ch":"第６章 セキュリティ対策"},{"id":421,"q":"他人許容率とは何か。","a":"他人の生体情報を本人の生体情報と誤って認識してしまう率","ch":"第２章 コンピュータの基礎技術"},{"id":422,"q":"本人拒否率とは何か。","a":"本人の生体情報を本人の生体情報ではないと誤って認識してしまう率","ch":"第２章 コンピュータの基礎技術"},{"id":423,"q":"一度のユーザ認証で複数の業務システムの利用が可能となる仕組みを何というか。","a":"シングルサインオン","ch":"第２章 コンピュータの基礎技術"},{"id":424,"q":"パスワードを使わずにユーザを認証する技術を何というか。","a":"パスキー認証","ch":"第２章 コンピュータの基礎技術"},{"id":425,"q":"ユーザの認証要求がいつもとは異なる場合に追加認証を要求するユーザ認証技術を何というか。","a":"リスクベース認証","ch":"第２章 コンピュータの基礎技術"},{"id":426,"q":"ハッシュ関数とは何か。","a":"任意のデータから規則性がない固定長のビット列を生成する演算手法","ch":"第６章 セキュリティ対策"},{"id":427,"q":"ハッシュ値から元のデータを復元できるか。","a":"できない（一方向性）","ch":"第６章 セキュリティ対策"},{"id":428,"q":"2要素認証で組み合わせる3要素を挙げよ。","a":"知識要素、所有要素、生体要素","ch":"第６章 セキュリティ対策"},{"id":429,"q":"2要素認証と2段階認証の違いは何か。","a":"2要素認証では異なる認証要素を組み合わせるが、2段階認証では同じ認証要素を組み合わせる場合がある","ch":"第６章 セキュリティ対策"},{"id":430,"q":"メッセージ認証とは何を証明する仕組みか。","a":"メッセージが作成・送信してから受信するまでに改ざんされていないことを証明する仕組み","ch":"第６章 セキュリティ対策"},{"id":431,"q":"デジタル署名とは何を実現する仕組みか。","a":"メッセージの改ざん検知と送信者の正当性の認証の両方を実現する仕組み","ch":"第６章 セキュリティ対策"},{"id":432,"q":"デジタル署名でハッシュ値（MD）を誰の秘密鍵で暗号化するか。","a":"送信者の秘密鍵で暗号化する","ch":"第６章 セキュリティ対策"},{"id":433,"q":"デジタル証明書とは何か。","a":"公開鍵が間違いなく送信者または受信者のものであることを証明するデータ","ch":"第６章 セキュリティ対策"},{"id":434,"q":"デジタル証明書を発行する機関を何というか。","a":"認証局（CA）","ch":"第６章 セキュリティ対策"},{"id":435,"q":"サーバ認証により何でないことを確認できるか。","a":"悪質なWebサイトでないことを確認できる","ch":"第６章 セキュリティ対策"},{"id":436,"q":"SSLとは何を組み合わせてサーバ認証するプロトコルか。","a":"暗号化技術とデジタル署名を組み合わせてサーバ認証するプロトコル","ch":"第６章 セキュリティ対策"},{"id":437,"q":"SSLのデジタル証明書の発行基準を厳格化した仕組みを何というか。","a":"EV SSL","ch":"第６章 セキュリティ対策"},{"id":438,"q":"SSIDとは何か。","a":"無線LANのアクセスポイント（親機）を識別するID（名前）","ch":"第６章 セキュリティ対策"},{"id":439,"q":"SSIDのステルス機能とは何か。","a":"SSIDの発信を停止する機能","ch":"第６章 セキュリティ対策"},{"id":440,"q":"MACアドレスフィルタリングとは何か。","a":"接続を許可するMACアドレスをアクセスポイントに登録し登録したMACアドレスの接続要求のみ許可する技術","ch":"第６章 セキュリティ対策"},{"id":441,"q":"無線LANはどちらの暗号方式を採用しているか。","a":"共通鍵暗号方式","ch":"第６章 セキュリティ対策"},{"id":442,"q":"WPA3の暗号化方式は何か。","a":"CCMP","ch":"第６章 セキュリティ対策"},{"id":443,"q":"一般的な情報システム開発の流れを答えよ。","a":"要件定義⇒外部（基本）設計⇒内部（詳細）設計⇒プログラム設計⇒プログラミング⇒テスト⇒移行⇒運用・保守","ch":"第２章 コンピュータの基礎技術"},{"id":444,"q":"要件定義フェーズで検討する要件を4つ挙げよ。","a":"業務要件、組織・環境要件、機能要件、非機能要件","ch":"第７章 情報システム開発・運用"},{"id":445,"q":"外部委託先候補のベンダに具体的な提案を依頼する文書を何というか。","a":"RFP","ch":"第２章 コンピュータの基礎技術"},{"id":446,"q":"主に技術的な情報の提供を依頼する文書を何というか。","a":"RFI","ch":"第２章 コンピュータの基礎技術"},{"id":447,"q":"As-Is・To-Be分析のAs-Isは何を表すか。","a":"現状の姿","ch":"第７章 情報システム開発・運用"},{"id":448,"q":"As-Is・To-Be分析のTo-Beは何を表すか。","a":"目指すべき姿","ch":"第７章 情報システム開発・運用"},{"id":449,"q":"外部設計では何に向けた仕様を設計するか。","a":"ユーザに向けた仕様","ch":"第７章 情報システム開発・運用"},{"id":450,"q":"内部設計ではシステム内部のどのような部分を設計するか。","a":"ユーザから見えにくい部分（内部の動作・機能・物理データ等）","ch":"第７章 情報システム開発・運用"},{"id":451,"q":"プログラム設計とは各プログラムの機能を構造化して何として定義するフェーズか。","a":"モジュール","ch":"第７章 情報システム開発・運用"},{"id":452,"q":"プログラムの作成を何と呼ぶか（2つ）。","a":"実装、コーディング","ch":"第２章 コンピュータの基礎技術"},{"id":453,"q":"一斉移行方式のメリットとデメリットを答えよ。","a":"メリット：移行コストや手間が小さい。デメリット：システム停止時間が発生、移行後のトラブル発生リスクが高い","ch":"第２章 コンピュータの基礎技術"},{"id":454,"q":"段階的移行方式のメリットとデメリットを答えよ。","a":"メリット：移行後のトラブル発生リスクが低い、移行作業が簡単。デメリット：時間と手間が多くなる、現行システムとの連携が必要","ch":"第２章 コンピュータの基礎技術"},{"id":455,"q":"ウォーターフォールモデルの原則を3つ挙げよ。","a":"①工程の後戻りをしない②各工程の成果を書類にまとめる③成果物をレビューして次工程に進む","ch":"第７章 情報システム開発・運用"},{"id":456,"q":"ウォーターフォールモデルのデメリットを3つ挙げよ。","a":"①上流工程の不具合が下流工程に大きく影響する②上流工程の不具合が下流工程まで発見できない場合がある③下流工程での仕様変更に対する柔軟な対応が困難","ch":"第７章 情報システム開発・運用"},{"id":457,"q":"プロトタイプモデルとは何か。","a":"試作品を作成してユーザに評価してもらい修正を繰り返しながら開発を進めるモデル","ch":"第７章 情報システム開発・運用"},{"id":458,"q":"スパイラルモデルとは何か。","a":"開発対象をサブシステムに分割し各サブシステムをウォーターフォールモデルで開発してユーザに評価してもらい次のサブシステムを開発するサイクルを繰り返すモデル","ch":"第７章 情報システム開発・運用"},{"id":459,"q":"アジャイル開発の4つの価値を挙げよ。","a":"①人同士の相互作用②動作するソフトウェア③顧客との協調④変化に対応","ch":"第７章 情報システム開発・運用"},{"id":460,"q":"スクラムのスプリントとは何か。","a":"一定の期間ごとに開発する単位","ch":"第７章 情報システム開発・運用"},{"id":461,"q":"スクラムのプロダクトバックログとは何か。","a":"改善要素や機能を記述したリストで優先順位付けしたもの","ch":"第７章 情報システム開発・運用"},{"id":462,"q":"スクラムのプロダクトオーナーの役割は何か。","a":"スクラムチームが開発する製品の価値を最大化させる役割","ch":"第７章 情報システム開発・運用"},{"id":463,"q":"スクラムのスクラムマスターの役割は何か。","a":"スクラムチームメンバーがスクラムへの理解を深めて円滑に開発を進められるように支援する役割","ch":"第７章 情報システム開発・運用"},{"id":464,"q":"デイリースクラムとは何か。","a":"開発チームが毎日行う短時間（通常15分程度）のミーティング","ch":"第７章 情報システム開発・運用"},{"id":465,"q":"XPのペアプログラミングとは何か。","a":"2人のプログラマがペアとなって1つのプログラムを作成すること","ch":"第７章 情報システム開発・運用"},{"id":466,"q":"XPのテスト駆動開発とは何か。","a":"最初に必要最低限のテストを行った後にプログラムを完成させる手法","ch":"第７章 情報システム開発・運用"},{"id":467,"q":"XPのリファクタリングとは何か。","a":"完成したプログラムでも改良を続けて保守性を高めること（外部から見た振る舞いは変更しない）","ch":"第７章 情報システム開発・運用"},{"id":468,"q":"XPのYAGNIとは何か。","a":"「今必要なことだけをやる」という意味で必要な機能の実装にとどめ将来を見据えた機能追加を避けること","ch":"第７章 情報システム開発・運用"},{"id":469,"q":"POAとは何に着目するアプローチか。","a":"業務のプロセス（流れ・手順）に着目するアプローチ","ch":"第７章 情報システム開発・運用"},{"id":470,"q":"DOAとは何に着目するアプローチか。","a":"業務のデータに着目するアプローチ","ch":"第７章 情報システム開発・運用"},{"id":471,"q":"OOAの基本概念を説明せよ。","a":"処理を部品化して、部品を組み合わせることでシステムを実現する","ch":"第７章 情報システム開発・運用"},{"id":472,"q":"カプセル化とは何か。","a":"データとデータを操作するメソッドを一体化してユーザから見えなくすること","ch":"第７章 情報システム開発・運用"},{"id":473,"q":"インヘリタンスとは何か。","a":"階層型クラスでデータやメソッドを上位クラス・下位クラス間で継承できる性質","ch":"第７章 情報システム開発・運用"},{"id":474,"q":"汎化とは何か。","a":"下位クラスから上位クラスを作り出すこと","ch":"第７章 情報システム開発・運用"},{"id":475,"q":"特化とは何か。","a":"上位クラスから下位クラスを作り出すこと","ch":"第７章 情報システム開発・運用"},{"id":476,"q":"マッシュアップとは何か。","a":"複数の既存するWebサービスを組み合わせて新たなWebサービスを生み出す技法","ch":"第７章 情報システム開発・運用"},{"id":477,"q":"リバースエンジニアリングとは何か。","a":"稼働しているプログラムのソースコードを解析し設計仕様等を抽出しソフトウェアの修正・再開発を支援する技法","ch":"第７章 情報システム開発・運用"},{"id":478,"q":"DevOpsとは何か。","a":"情報システム開発側と運用側が密接に連携してシステム開発・保守を柔軟かつ迅速に行う開発技法","ch":"第７章 情報システム開発・運用"},{"id":479,"q":"SOAとは何か。","a":"複数の業務プロセスをビジネス的に汎用性の高い機能単位に分割して部品化し、それらを組み合わせて新たな情報システムを構築する技法","ch":"第７章 情報システム開発・運用"},{"id":480,"q":"MSAとは何か。","a":"SOAのサービスをさらに小規模な単位として組み合わせることで特定のアプリケーションを実現する技法","ch":"第７章 情報システム開発・運用"},{"id":481,"q":"ソフトウェアのステップ数を基に開発規模を見積もる技法を何というか。","a":"LOC法","ch":"第２章 コンピュータの基礎技術"},{"id":482,"q":"過去の類似プロジェクトの実績・経験値を基に見積もる技法を何というか。","a":"トップダウン法（類推法）","ch":"第２章 コンピュータの基礎技術"},{"id":483,"q":"作業工程を細分化し標準工数を足し合わせて見積もる技法を何というか。","a":"ボトムアップ法","ch":"第２章 コンピュータの基礎技術"},{"id":484,"q":"プログラムステップ数に係数を掛けて工数を見積もる方法を何というか。","a":"COCOMO","ch":"第２章 コンピュータの基礎技術"},{"id":485,"q":"ソフトウェアの機能ごとの個数と複雑さにより見積もる方法を何というか。","a":"ファンクションポイント法","ch":"第２章 コンピュータの基礎技術"},{"id":486,"q":"縦軸に作業項目、横軸に期間をとり各作業の予定と実績を横棒グラフで表現する図を何というか。","a":"ガントチャート","ch":"第２章 コンピュータの基礎技術"},{"id":487,"q":"WBSとは何か。","a":"プロジェクトで行う作業や成果物を管理可能な大きさに階層的に要素分解する手法","ch":"第７章 情報システム開発・運用"},{"id":488,"q":"WBSの最下位層の要素を何というか。","a":"ワークパッケージ","ch":"第７章 情報システム開発・運用"},{"id":489,"q":"EV（実績値）の計算式を答えよ。","a":"EV = 完成時総予算（BAC）× 作業進捗率","ch":"第７章 情報システム開発・運用"},{"id":490,"q":"CV（コスト差異）の計算式を答えよ。","a":"CV = EV - AC","ch":"第７章 情報システム開発・運用"},{"id":491,"q":"SV（スケジュール差異）の計算式を答えよ。","a":"SV = EV - PV","ch":"第７章 情報システム開発・運用"},{"id":492,"q":"CPI（コスト効率指数）の計算式を答えよ。","a":"CPI = EV ÷ AC","ch":"第７章 情報システム開発・運用"},{"id":493,"q":"SPI（スケジュール効率指数）の計算式を答えよ。","a":"SPI = EV ÷ PV","ch":"第７章 情報システム開発・運用"},{"id":494,"q":"ホストOS型仮想化サーバとは何か。","a":"ホストOS上に仮想化ソフトウェアをインストールし仮想マシンを稼働させる仕組み","ch":"第７章 情報システム開発・運用"},{"id":495,"q":"ハイパーバイザー型仮想化サーバとは何か。","a":"物理サーバ上に仮想化ソフトウェア（ハイパーバイザー）を直接インストールする仕組み（ホストOSが不要）","ch":"第７章 情報システム開発・運用"},{"id":496,"q":"コンテナ型仮想化サーバとは何か。","a":"ホストOS上にコンテナエンジンをインストールし仮想的なユーザ空間を構築する仕組み","ch":"第７章 情報システム開発・運用"},{"id":497,"q":"シンプロビショニングとは何か。","a":"物理的な容量が不足していても仮想化して割り当てておき実際のデータ容量の増加に応じて物理ストレージを増やしていく技術","ch":"第７章 情報システム開発・運用"},{"id":498,"q":"シックプロビショニングとは何か。","a":"確保要求があった容量を実際に確保・割り当てる技術","ch":"第７章 情報システム開発・運用"},{"id":499,"q":"EDIの意味と一般的な指す内容を答えよ。","a":"電子データ交換。一般的には企業間の電子商取引のデータ交換を指す","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":500,"q":"EDIの規約を4つ挙げよ。","a":"レベル1：情報伝達規約、レベル2：情報表現規約、レベル3：業務運用規約、レベル4：取引基本規約","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":501,"q":"QRコードのメリットを4つ挙げよ。","a":"様々なデータ形式を扱える、大容量のデータを扱える、全方向での読み取り可能、汚れ・破損に強い","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":502,"q":"RFIDとは何か。","a":"無線による非接触型の自動識別技術","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":503,"q":"RFIDのメリットを4つ挙げよ。","a":"複数のRFタグを一括読み取れる、距離が離れていても読み取れる、梱包された商品を箱の外側から読み取れる、表面が汚れていても読み取れる","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":504,"q":"タッチ決済で利用されている非接触型近距離無線データ通信技術を何というか。","a":"NFC","ch":"第２章 コンピュータの基礎技術"},{"id":505,"q":"ITガバナンスとは何か。","a":"ステークホルダーのニーズに基づき組織の価値を高めるために実践する行動であり情報システムのあるべき姿を示す情報システム戦略の策定及び実現に必要となる組織能力","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":506,"q":"TCOとは何か。","a":"情報システムの導入から維持・管理・廃棄までにかかる費用の総額","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":507,"q":"経済産業省が定義するCIOの役割を3つ挙げよ。","a":"①情報活用による経営戦略の創造②全社横断のビジネス変革③ITガバナンス確立","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":508,"q":"ITリスク対処方法を4つ挙げよ。","a":"リスク低減、リスク回避、リスク移転、リスク保有","ch":"第６章 セキュリティ対策"},{"id":509,"q":"ERPパッケージとは何か。","a":"生産・販売・物流・在庫・財務会計・人事等の基幹業務プロセスを統合し業務効率化と情報の一元化を図る情報システム","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":510,"q":"ERPパッケージに変更を加えることを何というか。","a":"カスタマイズ","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":511,"q":"BSCの4つの視点を挙げよ。","a":"財務の視点、顧客の視点、業務プロセスの視点、人材と変革の視点","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":512,"q":"BSCは何と何で構成されるか。","a":"戦略マップとスコアカード","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":513,"q":"デジタルデバイドとは何と何の間の格差か。","a":"情報通信技術を利用できる者と利用できない者との間の格差","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":514,"q":"ユーザビリティとは何か。","a":"製品やサービスが特定の利用者によって特定の状況下で特定の目的を達成するために用いられる際の有効さ・効率・満足度の度合い","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":515,"q":"UIとは何か。","a":"ユーザが製品やサービスを操作する際の手段や方法の総称（主に見た目や操作性）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":516,"q":"UXとは何か。","a":"製品やサービスを通じてユーザーが得る体験や印象の総称","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":517,"q":"アクセシビリティとは何か。","a":"すべての人がウェブで提供される情報や機能を支障なく利用できること","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":518,"q":"機械学習とは何か。","a":"一定の計算方法に基づき入力データからパターンやルールを発見し新たなデータに関する識別や予測等を可能とする技術の総称","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":519,"q":"機械学習に該当する技術を4つ挙げよ。","a":"教師あり学習、教師なし学習、強化学習、深層学習（ディープラーニング）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":520,"q":"教師あり学習とは何か。","a":"正解のラベルを付けた学習用データを用いて機械学習する方法","ch":"第２章 コンピュータの基礎技術"},{"id":521,"q":"教師なし学習とは何か。","a":"正解のラベルを付けない学習用データを用いて機械学習する方法","ch":"第２章 コンピュータの基礎技術"},{"id":522,"q":"深層学習（ディープラーニング）とは何か。","a":"ニューラルネットワークにより機械学習する方法","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":523,"q":"強化学習とは何か。","a":"目的として設定された得点を最大化するよう学習する方法","ch":"第２章 コンピュータの基礎技術"},{"id":524,"q":"ニューラルネットワークの3層を挙げよ。","a":"入力層、中間層（隠れ層）、出力層","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":525,"q":"ニューロン間の結合強度を何というか。","a":"重み","ch":"第３章 データベース"},{"id":526,"q":"出力データを計算する関数を何というか。","a":"活性化関数","ch":"第２章 コンピュータの基礎技術"},{"id":527,"q":"生成AIとは何か。","a":"ディープラーニングによりAIが自ら学習を重ね新たなコンテンツを生み出すAI","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":528,"q":"モデル崩壊とは何か。","a":"AIが生成したデータをAIが大量に再学習し続けることで出力の品質が低下する現象","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":529,"q":"ハルシネーションとは何か。","a":"AIが事実に基づかない情報や実際には存在しない情報を生成する現象","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":530,"q":"プロンプトインジェクションとは何か。","a":"生成AIに与える指示文に悪意ある命令や誘導文を埋め込む攻撃","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":531,"q":"データポイズニング攻撃とは何か。","a":"訓練データに悪意あるデータや誤った教師ラベルを混入させる攻撃","ch":"第２章 コンピュータの基礎技術"},{"id":532,"q":"モデル監視とは何か。","a":"運用中のAIモデルの予測精度やエラー率、入力データの分布変化などを継続的に観測し性能低下や異常の兆候を早期に検知する管理活動","ch":"第２章 コンピュータの基礎技術"},{"id":533,"q":"モデル劣化とは何か。","a":"運用中のAIモデルの予測精度や性能が時間の経過とともに低下していく現象","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":534,"q":"コンセプトドリフトとは何か。","a":"入力データと正解との関係性そのものが時間の経過とともに変化してしまう現象","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":535,"q":"LLMとは何か。","a":"インターネット上の文書や書籍等の膨大なテキストデータを用いて事前学習された人間のように自然な文章を理解・生成できるAIモデル（大規模言語モデル）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":536,"q":"MLOpsとは何か。","a":"機械学習モデルの開発から運用・監視・改善までの一連のプロセスを自動化・効率化するための手法やプラクティス","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":537,"q":"AIガバナンスとは何か。","a":"組織がAIを業務で適切かつ安全に活用するために利用方針やルール・管理体制・責任分担などを定めリスクを統制する仕組み","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":538,"q":"ブラックボックス問題とは何か。","a":"AIの予測や結論は得られるものの、その結論に至った理由や判断過程を人間が理解・説明できないという問題","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":539,"q":"M2Mとは何か。","a":"情報ネットワークで接続された機械間で相互にデータを連携するとともに自動的に最適な制御が行われるシステム","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":540,"q":"IoTとは何か。","a":"機械・自動車・家電・ロボット・施設などのあらゆるモノがインターネットにつながって情報をやり取りすること","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":541,"q":"ストリーミングデータの代表的な処理方式を何というか。","a":"複合イベント処理","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":542,"q":"オープンデータとは何か。","a":"機械判読に適したデータ形式で二次利用が可能な利用ルールで公開されたデータ（官民を問わない）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":543,"q":"エッジコンピューティングとは何か。","a":"IoT等で生成されたビッグデータを生成元の周縁で処理する技術","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":544,"q":"エッジコンピューティングのメリットを3つ挙げよ。","a":"データ通信量の低減、セキュリティの確保、リアルタイム処理","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":545,"q":"ルールベース型チャットボットとは何か。","a":"想定問答を事前に設定しておく方式","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":546,"q":"機械学習型チャットボットとは何か。","a":"機械学習により応答を生成する方式","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":547,"q":"RPAとは何か。","a":"人のみが対応可能な作業や高度な作業を人に代わって実行できるソフトウェアロボット技術","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":548,"q":"RPAの自動化3段階を挙げよ。","a":"クラス1（RPA：定型業務の自動化）、クラス2（EPA：一部非定型業務の自動化）、クラス3（CA：高度な自動化）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":549,"q":"フィンテックとは何か。","a":"新たな技術を活用してスマートフォン等を通じて行われる革新的な金融サービス","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":550,"q":"ブロックチェーン技術とは何か。","a":"情報ネットワーク上にある端末を直接接続して取引記録を分散的に処理・記録するデータベース","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":551,"q":"パブリック型ブロックチェーンとは何か。","a":"誰でも許可なく取引に参加できる公開されたネットワークで管理者が存在しないブロックチェーン","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":552,"q":"プライベート型ブロックチェーンとは何か。","a":"限定されたユーザが参加できる組織内で閉じたネットワークで管理者が存在するブロックチェーン","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":553,"q":"Society 5.0とは何か。","a":"第5期科学技術基本計画において日本が目指すべき未来社会の姿として提唱されたもの","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":554,"q":"シェアリングエコノミーとは何か。","a":"個人等が保有する活用可能な資産をマッチングプラットフォームを介して貸借・売買・交換により他の個人等も利用可能とする経済活性化活動","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":555,"q":"MaaSとは何か。","a":"交通をICT活用によりクラウド化しマイカー以外のすべての交通手段によるモビリティを1つのサービスとしてとらえシームレスにつなぐ移動の概念","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":556,"q":"クラウドソーシングとは何か。","a":"インターネット上で不特定多数の人材に業務内容と報酬を提示し仕事を発注する仕組み","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":557,"q":"Web3.0とは何か。","a":"ブロックチェーン技術を基盤とする分散型ネットワーク環境","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":558,"q":"インダストリー4.0とは何か。","a":"主に製造業においてIoTやAIの利活用により飛躍的に産業構造が変革し生産性の向上や効率化が図られること","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":559,"q":"AR（拡張現実）とは何か。","a":"現実世界の映像や空間を基盤としその上にデジタル情報を重ねて表示する技術","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":560,"q":"VR（仮想現実）とは何か。","a":"コンピュータが生成した仮想空間の中にユーザを没入させ現実とは異なる環境を体験させる技術","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":561,"q":"MR（複合現実）とは何か。","a":"現実空間と仮想空間を高度に融合し両者が相互に影響し合う形で共存する環境を実現する技術","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":562,"q":"BYODとは何か。","a":"社員がプライベートで使っている情報端末を仕事で使うこと","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":563,"q":"シャドーITとは何か。","a":"組織の公式な手続きを経ずに業務に使用している端末機器や情報システム","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":564,"q":"COPEとは何か。","a":"BYODとは対極の概念（企業が端末を所有し社員に利用させる形態）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":565,"q":"MAMとは何か。","a":"1台の携帯端末上に仮想的に業務用区画を設定し私的利用と業務利用のアプリ・データを分割管理する機能","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":566,"q":"MCMとは何か。","a":"携帯端末内の業務データを管理するシステムや技術","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":567,"q":"MDMとは何か。","a":"スマートフォン等の携帯端末を業務で利用する際に一元的に管理する仕組み","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":568,"q":"MDMのリモートロックとは何か。","a":"遠隔地から携帯端末をロックする機能","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":569,"q":"MDMのリモートワイプとは何か。","a":"遠隔地からデータを消去する機能","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":570,"q":"MDMのローカルワイプとは何か。","a":"パスワード認証に複数回失敗した際にデータを自動消去する機能","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":571,"q":"特定のWebサイトを検索結果の上位に表示されやすくする技術を何というか。","a":"SEO","ch":"第２章 コンピュータの基礎技術"},{"id":572,"q":"検索アルゴリズムの穴をついて不正な手法で検索順位を上げることを何というか。","a":"ブラックハットSEO","ch":"第２章 コンピュータの基礎技術"},{"id":573,"q":"検索エンジンの学習機能によりユーザが目にする情報が偏る状態を何というか。","a":"フィルターバブル","ch":"第２章 コンピュータの基礎技術"},{"id":574,"q":"WebページにバナーとなるURLへのリンクを掲載しサイト閲覧者を遷移させる広告手法を何というか。","a":"アフィリエイト","ch":"第４章 通信ネットワーク"},{"id":575,"q":"検索サイトでキーワードに関連する広告を検索結果に表示する広告サービスを何というか。","a":"リスティング広告（キーワード広告）","ch":"第２章 コンピュータの基礎技術"},{"id":576,"q":"記事と広告が自然に融合している広告を何というか。","a":"ネイティブ広告","ch":"第２章 コンピュータの基礎技術"},{"id":577,"q":"実店舗の販売促進につなげるためWeb上で行う販売促進活動を何というか。","a":"O2O","ch":"第２章 コンピュータの基礎技術"},{"id":578,"q":"広告であることを明示せず中立的な立場を装って宣伝行為を行うことを何というか。","a":"ステルスマーケティング","ch":"第２章 コンピュータの基礎技術"},{"id":579,"q":"屋外や店頭等に設置された液晶ディスプレイなどの映像表示装置を何というか。","a":"デジタルサイネージ","ch":"第２章 コンピュータの基礎技術"},{"id":580,"q":"ソフトウェアやサービス等の範囲や利用期間に応じて課金する方式を何というか。","a":"サブスクリプション","ch":"第２章 コンピュータの基礎技術"},{"id":581,"q":"基本機能の利用は無料とし付加的機能の利用に課金する方式を何というか。","a":"フリーミアム","ch":"第２章 コンピュータの基礎技術"},{"id":582,"q":"エンゲージメント率とは何か。","a":"1つの投稿に対してどのくらいの反応があったかを測る指標","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":583,"q":"コンバージョン率とは何か。","a":"ウェブサイトでの成約率（ECサイトでは閲覧者のうち商品を購入した人の割合）","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":584,"q":"直帰率とは何か。","a":"全体のセッションのうち何%が1ページしか見なかったかを示す指標","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":585,"q":"離脱率とは何か。","a":"特定のページを見たセッションのうちそのページを最後に離脱してしまったセッションの割合","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":586,"q":"チャーン率とは何か。","a":"ユーザが契約や取引を解約した割合","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":587,"q":"集団極性化とは何か。","a":"集団における意思決定は個人の意思決定より極端な方向に振れやすいという心理的傾向","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":588,"q":"エコーチェンバーとは何か。","a":"SNSで自分と似た意見のユーザをフォローした結果意見を発信すると自分と似た意見が返ってくる状況","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":589,"q":"ダークパターンとは何か。","a":"ユーザの心理を利用して不利益な行動を誘導するユーザインターフェイスを設計すること","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":590,"q":"EAのビジネスアーキテクチャとは何か。","a":"事業における業務プロセスやデータフローを全体的に示したもの","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":591,"q":"EAのデータアーキテクチャとは何か。","a":"事業に必要となるデータの内容や他のデータとの関連性・データ構造等を全体的に示したもの","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":592,"q":"EAのアプリケーションアーキテクチャとは何か。","a":"業務プロセスを実施するシステムの機能や構成などを全体的に示したもの","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":593,"q":"EAのテクノロジーアーキテクチャとは何か。","a":"情報システムの構築や運用において利用する技術を全体的に示したもの","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":594,"q":"PMBOKとは何か。","a":"プロジェクトマネジメントを進めるための知識を体系化したフレームワーク","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":595,"q":"共通フレーム2013とは何か。","a":"ソフトウェアの構想から廃棄に至るまでのライフサイクルを通じて必要な作業項目・役割等を包括的に規定したフレームワーク","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":596,"q":"ITILとは何か。","a":"ITサービスマネジメントを企画し運営するためのベストプラクティス集","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":597,"q":"COBITとは何か。","a":"企業等の組織においてITガバナンスやマネジメント目標等を定めたフレームワーク","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":598,"q":"ISMSの3要素を挙げよ。","a":"機密性、可用性、完全性","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":599,"q":"ISMS認証基準は何か。","a":"JIS Q 27001","ch":"第８章 経営戦略と情報システム・情報技術"},{"id":600,"q":"分散および標準偏差とはどのような指標か。","a":"データのばらつきを示す指標","ch":"第９章 統計解析"},{"id":601,"q":"偏差とは何か。","a":"各データと平均値との差","ch":"第９章 統計解析"},{"id":602,"q":"分散とは何か。","a":"各データの偏差を2乗した値の合計をデータ数で割った値","ch":"第９章 統計解析"},{"id":603,"q":"標準偏差とは何か。","a":"分散のルート（√）をとった値","ch":"第９章 統計解析"},{"id":604,"q":"変動係数とは何か。","a":"平均値に対するデータのばらつきを相対的に評価する指標（標準偏差÷平均値）","ch":"第９章 統計解析"},{"id":605,"q":"正規分布とはどのような分布か。","a":"データの分布が平均値を頂点とした左右対称の山形（山の数は1つ）の分布","ch":"第９章 統計解析"},{"id":606,"q":"正規分布で平均±1×標準偏差の範囲に含まれる割合は約何%か。","a":"約68%","ch":"第９章 統計解析"},{"id":607,"q":"正規分布で平均±2×標準偏差の範囲に含まれる割合は約何%か。","a":"約95%","ch":"第９章 統計解析"},{"id":608,"q":"正規分布で平均±3×標準偏差の範囲に含まれる割合は約何%か。","a":"約99.7%","ch":"第９章 統計解析"},{"id":609,"q":"ベルヌーイ試行とは何か。","a":"特定の試行を行った際に2つの結果しか起こらない試行","ch":"第９章 統計解析"},{"id":610,"q":"二項分布とは何か。","a":"ベルヌーイ試行を複数回行った際に事象が起こる回数の確率分布","ch":"第９章 統計解析"},{"id":611,"q":"二項分布の平均の計算式を答えよ（試行回数n、事象確率p）。","a":"平均 = np","ch":"第９章 統計解析"},{"id":612,"q":"二項分布の分散の計算式を答えよ（試行回数n、事象確率p）。","a":"分散 = np(1-p)","ch":"第９章 統計解析"},{"id":613,"q":"ポアソン分布とは何か。","a":"一定期間内に事象が起こる回数の平均が判明している場合にその事象が起こる回数の確率分布","ch":"第９章 統計解析"},{"id":614,"q":"超幾何分布は復元抽出・非復元抽出のどちらを前提とするか。","a":"非復元抽出","ch":"第９章 統計解析"},{"id":615,"q":"二項分布は復元抽出・非復元抽出のどちらを前提とするか。","a":"復元抽出","ch":"第９章 統計解析"},{"id":616,"q":"点推定とは何か。","a":"標本の特性値から母集団の特性値を1つの値で推定すること","ch":"第９章 統計解析"},{"id":617,"q":"母平均の点推定は何で推定するか。","a":"標本平均","ch":"第９章 統計解析"},{"id":618,"q":"母分散の点推定は何で推定するか。","a":"標本の不偏分散","ch":"第９章 統計解析"},{"id":619,"q":"不偏分散の計算式を答えよ。","a":"不偏分散 = 偏差の2乗の合計 ÷ (データ数 - 1)","ch":"第９章 統計解析"},{"id":620,"q":"区間推定とは何か。","a":"母集団の推定値に幅をもたせる推定","ch":"第９章 統計解析"},{"id":621,"q":"区間推定の幅を何というか。","a":"信頼区間","ch":"第９章 統計解析"},{"id":622,"q":"否定したい仮説を何というか。","a":"帰無仮説","ch":"第２章 コンピュータの基礎技術"},{"id":623,"q":"証明したい仮説を何というか。","a":"対立仮説","ch":"第２章 コンピュータの基礎技術"},{"id":624,"q":"帰無仮説を否定する基準値を何というか。","a":"有意水準","ch":"第９章 統計解析"},{"id":625,"q":"第1種の過誤とは何か。","a":"帰無仮説が正しいにもかかわらず誤っているとしてしまう過誤","ch":"第９章 統計解析"},{"id":626,"q":"第2種の過誤とは何か。","a":"帰無仮説が誤っているにもかかわらず正しいとしてしまう過誤","ch":"第９章 統計解析"},{"id":627,"q":"有意水準は第1種と第2種の過誤のどちらを犯す確率か。","a":"第1種の過誤を犯す確率","ch":"第９章 統計解析"},{"id":628,"q":"1つの母集団の平均を検定する場合、母分散既知ならどの検定を使うか。","a":"z検定","ch":"第９章 統計解析"},{"id":629,"q":"1つの母集団の平均を検定する場合、母分散未知で標本数が少ない（30未満）ならどの検定を使うか。","a":"t検定","ch":"第９章 統計解析"},{"id":630,"q":"1つの母集団の分散を検定する場合はどの検定を使うか。","a":"χ2乗検定","ch":"第９章 統計解析"},{"id":631,"q":"2つの母集団の分散の差（等分散かどうか）を検定する場合はどの検定を使うか。","a":"F検定","ch":"第９章 統計解析"},{"id":632,"q":"独立性検定とは何か。","a":"クロス集計表において分類基準間に関連があるかどうかの検定（χ2乗分布を使用）","ch":"第９章 統計解析"},{"id":633,"q":"適合度検定とは何か。","a":"クロス集計表において観測データが特定の分布に適合するかどうかの検定（χ2乗分布を使用）","ch":"第９章 統計解析"},{"id":634,"q":"分散分析とは何か。","a":"3つ以上の標本に対して母平均に差があるかどうかを検定する手法","ch":"第９章 統計解析"},{"id":635,"q":"一元配置の分散分析とは何か。","a":"1つの要因（因子）からなるデータを分析する方法","ch":"第９章 統計解析"},{"id":636,"q":"回帰分析の説明変数と被説明変数とは何か。","a":"説明変数：要因となる数値、被説明変数：結果となる数値","ch":"第９章 統計解析"},{"id":637,"q":"単回帰分析と重回帰分析の違いは何か。","a":"単回帰：要因が1つ、重回帰：要因が複数","ch":"第９章 統計解析"},{"id":638,"q":"コンジョイント分析とは何か。","a":"複数のスペックに対する選好を尋ね各要素が選好にどの程度影響しているかを調べる分析手法","ch":"第９章 統計解析"},{"id":639,"q":"クラスター分析とは何か。","a":"多くの異なったものがあるデータを似たもの同士に分類するための分析方法","ch":"第９章 統計解析"},{"id":640,"q":"相関係数はどの範囲の値をとるか。","a":"-1から+1の範囲","ch":"第９章 統計解析"},{"id":641,"q":"相関係数の絶対値が大きいほど相関関係はどのようか。","a":"強い","ch":"第９章 統計解析"}];
+
+const CHAPTERS = [...new Set(QUESTIONS.map(q=>q.ch))].sort();
+const CHAPTER_COLORS = [
+  '#38bdf8','#4ade80','#fbbf24','#f87171',
+  '#a78bfa','#fb923c','#34d399','#e879f9'
+];
+
+// ===== STORAGE =====
+const STORE_KEY = 'keijouho_v1';
+function loadStore(){
+  try{
+    const d = localStorage.getItem(STORE_KEY);
+    return d ? JSON.parse(d) : {progress:{},meta:{}};
+  }catch(e){return {progress:{},meta:{}};}
+}
+function saveStore(s){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(s));}catch(e){}
+}
+function getProgress(id){
+  const s = loadStore();
+  return s.progress[id] || {attempts:0,correct:0,lastResult:null,bookmarked:false,lastAttempted:null};
+}
+function recordAnswer(id, isCorrect){
+  const s = loadStore();
+  if(!s.progress[id]) s.progress[id]={attempts:0,correct:0,lastResult:null,bookmarked:false,lastAttempted:null};
+  const p = s.progress[id];
+  p.attempts++;
+  if(isCorrect) p.correct++;
+  p.lastResult = isCorrect ? 'correct' : 'wrong';
+  p.lastAttempted = new Date().toISOString();
+  s.meta.lastStudied = p.lastAttempted;
+  saveStore(s);
+}
+function toggleBM(id){
+  const s = loadStore();
+  if(!s.progress[id]) s.progress[id]={attempts:0,correct:0,lastResult:null,bookmarked:false,lastAttempted:null};
+  s.progress[id].bookmarked = !s.progress[id].bookmarked;
+  saveStore(s);
+  return s.progress[id].bookmarked;
+}
+
+// ===== STATE =====
+let sessionQueue = [];
+let sessionIdx = 0;
+let sessionCorrect = 0;
+let sessionWrong = [];
+let answered = false;
+let lastMode = null;
+let lastModeParam = null;
+let filterState = {
+  chapters: [],
+  wrongLast: false,
+  frequentlyWrong: false,
+  notYetCorrect: false,
+  bookmark: false,
+  limitAttempts: 0
+};
+let selectedChapter = null;
+
+// ===== SCREEN NAV =====
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active','screen-fade');
+  });
+  const sc = document.getElementById(id);
+  sc.classList.add('active','screen-fade');
+}
+
+// ===== HOME =====
+function renderHome(){
+  const s = loadStore();
+  let total=0, correct=0;
+  Object.values(s.progress).forEach(p=>{
+    total+=p.attempts; correct+=p.correct;
+  });
+  document.getElementById('h-total').textContent = total;
+  document.getElementById('h-rate').textContent = total>0 ? Math.round(correct/total*100)+'%' : '-%';
+  drawRadar();
+  renderLegend();
+}
+
+function getChapterRate(ch){
+  const qs = QUESTIONS.filter(q=>q.ch===ch);
+  const s = loadStore();
+  let t=0,c=0;
+  qs.forEach(q=>{
+    const p = s.progress[q.id];
+    if(p && p.attempts>0){t+=p.attempts;c+=p.correct;}
+  });
+  return t>0 ? c/t : null;
+}
+
+function drawRadar(){
+  const canvas = document.getElementById('radarCanvas');
+  const ctx = canvas.getContext('2d');
+  const W=150,H=150,cx=75,cy=75,r=52;
+  ctx.clearRect(0,0,W,H);
+  const n = CHAPTERS.length;
+  const angles = CHAPTERS.map((_,i)=>-Math.PI/2 + (2*Math.PI/n)*i);
+
+  // Grid
+  [0.25,0.5,0.75,1].forEach(frac=>{
+    ctx.beginPath();
+    angles.forEach((a,i)=>{
+      const x=cx+Math.cos(a)*r*frac, y=cy+Math.sin(a)*r*frac;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = frac===1 ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = frac===1 ? 1.5 : 1;
+    ctx.stroke();
+  });
+
+  // Axes
+  angles.forEach(a=>{
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+    ctx.strokeStyle='rgba(255,255,255,0.08)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  });
+
+  // Data polygon
+  const rates = CHAPTERS.map(ch=>{
+    const rate = getChapterRate(ch);
+    return rate !== null ? rate : 0;
+  });
+  ctx.beginPath();
+  angles.forEach((a,i)=>{
+    const x=cx+Math.cos(a)*r*rates[i], y=cy+Math.sin(a)*r*rates[i];
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.closePath();
+  ctx.fillStyle='rgba(56,189,248,0.18)';
+  ctx.fill();
+  ctx.strokeStyle='rgba(56,189,248,0.8)';
+  ctx.lineWidth=2;
+  ctx.stroke();
+
+  // Dots
+  angles.forEach((a,i)=>{
+    ctx.beginPath();
+    ctx.arc(cx+Math.cos(a)*r*rates[i], cy+Math.sin(a)*r*rates[i], 3.5, 0, Math.PI*2);
+    ctx.fillStyle=CHAPTER_COLORS[i];
+    ctx.fill();
+  });
+}
+
+function renderLegend(){
+  const el = document.getElementById('chart-legend');
+  el.innerHTML = CHAPTERS.map((ch,i)=>{
+    const rate = getChapterRate(ch);
+    const pct = rate !== null ? Math.round(rate*100)+'%' : '-';
+    const short = ch.replace(/第.章\s*/,'').substring(0,10);
+    return `<div class="legend-item">
+      <div class="legend-dot" style="background:${CHAPTER_COLORS[i]}"></div>
+      <div class="legend-label">${short}</div>
+      <div class="legend-pct">${pct}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== CHAPTER MODE =====
+function openChapter(){
+  const s = loadStore();
+  const el = document.getElementById('chapter-list');
+  el.innerHTML = CHAPTERS.map((ch,i)=>{
+    const qs = QUESTIONS.filter(q=>q.ch===ch);
+    const rate = getChapterRate(ch);
+    const pct = rate !== null ? Math.round(rate*100)+'%' : '未学習';
+    const num = ch.match(/第(.+?)章/)?.[1] || String(i+2);
+    return `<div class="ch-item" id="chi-${i}" onclick="selectChapter(${i})">
+      <div class="ch-number">${num}章</div>
+      <div class="ch-info">
+        <div class="ch-name">${ch.replace(/第.+?章\s*/,'')}</div>
+        <div class="ch-meta">${qs.length}問</div>
+      </div>
+      <div class="ch-rate">${pct}</div>
+    </div>`;
+  }).join('');
+  selectedChapter = null;
+  document.getElementById('btn-start-chapter').disabled = true;
+  document.getElementById('btn-start-chapter').style.opacity = '0.4';
+  showScreen('s-chapter');
+}
+
+function selectChapter(i){
+  document.querySelectorAll('.ch-item').forEach(el=>el.classList.remove('selected'));
+  document.getElementById('chi-'+i).classList.add('selected');
+  selectedChapter = i;
+  document.getElementById('btn-start-chapter').disabled = false;
+  document.getElementById('btn-start-chapter').style.opacity = '1';
+}
+
+function startChapter(){
+  if(selectedChapter === null) return;
+  const ch = CHAPTERS[selectedChapter];
+  const pool = shuffle([...QUESTIONS.filter(q=>q.ch===ch)]);
+  lastMode = 'chapter'; lastModeParam = selectedChapter;
+  startSession(pool);
+}
+
+// ===== RANDOM MODE =====
+function startRandom(){
+  const pool = shuffle([...QUESTIONS]).slice(0,10);
+  lastMode = 'random'; lastModeParam = null;
+  startSession(pool);
+}
+
+// ===== BOOKMARK MODE =====
+function openBookmarks(){
+  const s = loadStore();
+  const pool = QUESTIONS.filter(q=>s.progress[q.id]?.bookmarked);
+  if(pool.length===0){alert('ブックマーク済みの問題がありません。');return;}
+  lastMode = 'bookmark'; lastModeParam = null;
+  startSession(shuffle([...pool]));
+}
+
+// ===== FILTER MODE =====
+let filterLimitVal = 0; // 0 = unlimited
+
+function openFilter(){
+  filterState.chapters = [];
+  renderFilterChapters();
+  ['wrongLast','frequentlyWrong','notYetCorrect','bookmark'].forEach(k=>{
+    filterState[k] = false;
+    const el = document.getElementById('tf-'+k);
+    if(el) el.classList.remove('on');
+  });
+  filterLimitVal = 0;
+  updateLimitDisplay();
+  updateFilterCount();
+  showScreen('s-filter');
+}
+
+function renderFilterChapters(){
+  const el = document.getElementById('filter-chapter-list');
+  el.innerHTML = CHAPTERS.map((ch,i)=>`
+    <div class="ch-item" style="padding:10px 14px;" id="fch-${i}" onclick="toggleFilterChapter(${i})">
+      <div class="ch-number" style="width:28px;height:28px;font-size:10px;">${ch.match(/第(.+?)章/)?.[1]||i+2}章</div>
+      <div class="ch-info">
+        <div class="ch-name" style="font-size:12px;">${ch.replace(/第.+?章\s*/,'')}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleFilterChapter(i){
+  const ch = CHAPTERS[i];
+  const idx = filterState.chapters.indexOf(ch);
+  const el = document.getElementById('fch-'+i);
+  if(idx>-1){filterState.chapters.splice(idx,1);el.classList.remove('selected');}
+  else{filterState.chapters.push(ch);el.classList.add('selected');}
+  updateFilterCount();
+}
+
+function toggleFilter(key){
+  filterState[key] = !filterState[key];
+  const el = document.getElementById('tf-'+key);
+  if(el) filterState[key] ? el.classList.add('on') : el.classList.remove('on');
+  updateFilterCount();
+}
+
+function changeLimit(delta){
+  filterLimitVal = Math.max(0, filterLimitVal + delta);
+  updateLimitDisplay();
+  updateFilterCount();
+}
+
+function updateLimitDisplay(){
+  const disp = document.getElementById('limit-val-disp');
+  const num = document.getElementById('limit-num');
+  if(filterLimitVal === 0){
+    if(disp) disp.textContent = '制限なし';
+    if(num) num.textContent = '∞';
+  } else {
+    if(disp) disp.textContent = filterLimitVal+'回';
+    if(num) num.textContent = filterLimitVal;
+  }
+}
+
+function applyFilters(){
+  const s = loadStore();
+  let pool = [...QUESTIONS];
+  if(filterState.chapters.length > 0) pool = pool.filter(q=>filterState.chapters.includes(q.ch));
+  if(filterState.wrongLast) pool = pool.filter(q=>s.progress[q.id]?.lastResult === 'wrong');
+  if(filterState.frequentlyWrong) pool = pool.filter(q=>{
+    const p = s.progress[q.id];
+    if(!p || p.attempts < 3) return false;
+    return (p.attempts - p.correct) / p.attempts >= 0.5;
+  });
+  if(filterState.notYetCorrect) pool = pool.filter(q=>{
+    const p = s.progress[q.id];
+    return !p || p.correct === 0;
+  });
+  if(filterState.bookmark) pool = pool.filter(q=>s.progress[q.id]?.bookmarked);
+  if(filterLimitVal > 0) pool = pool.filter(q=>{
+    const p = s.progress[q.id];
+    return !p || p.attempts <= filterLimitVal;
+  });
+  return pool;
+}
+
+function updateFilterCount(){
+  const pool = applyFilters();
+  document.getElementById('filter-count').textContent = pool.length;
+  const btn = document.getElementById('btn-start-filter');
+  btn.disabled = pool.length === 0;
+  btn.style.opacity = pool.length === 0 ? '0.4' : '1';
+}
+
+function startFiltered(){
+  const pool = applyFilters();
+  if(pool.length === 0) return;
+  lastMode = 'filter'; lastModeParam = null;
+  startSession(shuffle([...pool]));
+}
+
+// ===== SESSION =====
+function startSession(pool){
+  sessionQueue = pool;
+  sessionIdx = 0;
+  sessionCorrect = 0;
+  sessionWrong = [];
+  showScreen('s-quiz');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = sessionQueue[sessionIdx];
+  const total = sessionQueue.length;
+  answered = false;
+
+  // Header
+  document.getElementById('q-prog-text').textContent = `${sessionIdx+1} / ${total}`;
+  document.getElementById('q-prog-fill').style.width = `${(sessionIdx/total)*100}%`;
+  document.getElementById('q-score').textContent = `✓ ${sessionCorrect}`;
+  document.getElementById('q-chapter-label').textContent = q.ch.replace(/第.+?章\s*/,'').substring(0,8);
+
+  // Bookmark
+  const bm = getProgress(q.id).bookmarked;
+  const bmBtn = document.getElementById('bm-btn');
+  bmBtn.textContent = bm ? '★' : '☆';
+  bm ? bmBtn.classList.add('active') : bmBtn.classList.remove('active');
+
+  // Question
+  document.getElementById('q-ch').textContent = q.ch;
+  document.getElementById('q-text').textContent = q.q;
+
+  // Choices
+  const wrong3 = getWrongChoices(q);
+  const choices = shuffle([{text:q.a, correct:true}, ...wrong3.map(w=>({text:w.a, correct:false}))]);
+  const labels = ['A','B','C','D'];
+  const el = document.getElementById('choices');
+  el.innerHTML = choices.map((c,i)=>`
+    <div class="choice-btn" id="c-${i}" onclick="selectChoice(${i},${c.correct})">
+      <div class="choice-label">${labels[i]}</div>
+      <div class="choice-text">${c.text}</div>
+    </div>
+  `).join('');
+
+  // Next button
+  const nb = document.getElementById('btn-next');
+  nb.classList.remove('visible');
+  nb.textContent = sessionIdx+1 < total ? '次の問題 →' : '結果を見る';
+}
+
+function getWrongChoices(q){
+  const sameChapter = QUESTIONS.filter(x=>x.ch===q.ch && x.id!==q.id);
+  const pool = sameChapter.length >= 3 ? sameChapter : QUESTIONS.filter(x=>x.id!==q.id);
+  return shuffle([...pool]).slice(0,3);
+}
+
+function selectChoice(idx, correct){
+  if(answered) return;
+  answered = true;
+  recordAnswer(sessionQueue[sessionIdx].id, correct);
+  if(correct) sessionCorrect++;
+  else sessionWrong.push(sessionQueue[sessionIdx]);
+
+  // Visual feedback
+  const btns = document.querySelectorAll('.choice-btn');
+  btns.forEach(b=>b.classList.add('answered'));
+  const chosen = document.getElementById('c-'+idx);
+  chosen.classList.add(correct ? 'correct' : 'wrong');
+  if(!correct){
+    // Find and highlight correct
+    btns.forEach((b,i)=>{
+      const txt = b.querySelector('.choice-text').textContent;
+      if(txt === sessionQueue[sessionIdx].a) b.classList.add('correct');
+    });
+  }
+
+  document.getElementById('btn-next').classList.add('visible');
+}
+
+function toggleBookmark(){
+  const q = sessionQueue[sessionIdx];
+  const bm = toggleBM(q.id);
+  const bmBtn = document.getElementById('bm-btn');
+  bmBtn.textContent = bm ? '★' : '☆';
+  bm ? bmBtn.classList.add('active') : bmBtn.classList.remove('active');
+}
+
+function nextQuestion(){
+  sessionIdx++;
+  if(sessionIdx >= sessionQueue.length){
+    showResult();
+    return;
+  }
+  renderQuestion();
+}
+
+// ===== RESULT =====
+function showResult(){
+  const total = sessionQueue.length;
+  const rate = Math.round(sessionCorrect/total*100);
+  document.getElementById('r-emoji').textContent = rate>=80?'🎉':rate>=50?'💪':'📖';
+  document.getElementById('r-title').textContent = rate>=80?'お見事！':rate>=50?'もう一息！':'復習しよう！';
+  document.getElementById('r-sub').textContent = `正答率 ${rate}%`;
+  document.getElementById('r-total').textContent = total;
+  document.getElementById('r-correct').textContent = sessionCorrect;
+  document.getElementById('r-wrong').textContent = total-sessionCorrect;
+  document.getElementById('r-rate').textContent = rate+'%';
+
+  const wl = document.getElementById('wrong-list');
+  const wlTitle = document.getElementById('wrong-list-title');
+  if(sessionWrong.length===0){
+    wlTitle.textContent = '✨ 全問正解！';
+    wl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">不正解はありませんでした</div>';
+  } else {
+    wlTitle.textContent = `不正解 ${sessionWrong.length}問`;
+    wl.innerHTML = sessionWrong.map(q=>`
+      <div class="wrong-item">
+        <div class="wi-q">Q: ${q.q}</div>
+        <div class="wi-a">A: ${q.a}</div>
+      </div>
+    `).join('');
+  }
+  showScreen('s-result');
+}
+
+function restartSession(){
+  let pool;
+  if(lastMode==='chapter' && lastModeParam!==null){
+    pool = shuffle([...QUESTIONS.filter(q=>q.ch===CHAPTERS[lastModeParam])]);
+  } else if(lastMode==='random'){
+    pool = shuffle([...QUESTIONS]).slice(0,10);
+  } else if(lastMode==='filter'){
+    pool = shuffle([...applyFilters()]);
+  } else if(lastMode==='bookmark'){
+    const s = loadStore();
+    pool = shuffle([...QUESTIONS.filter(q=>s.progress[q.id]?.bookmarked)]);
+  } else {
+    pool = shuffle([...QUESTIONS]).slice(0,10);
+  }
+  startSession(pool);
+}
+
+// ===== RESET =====
+function confirmReset(){
+  if(confirm('学習データを全てリセットしますか？\nこの操作は元に戻せません。')){
+    try{localStorage.removeItem(STORE_KEY);}catch(e){}
+    renderHome();
+    alert('リセットしました。');
+  }
+}
+
+// ===== UTILS =====
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded',()=>{
+  renderHome();
+});
+</script>
+</body>
+</html>
